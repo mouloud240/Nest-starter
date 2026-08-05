@@ -14,7 +14,7 @@ async function bootstrap() {
   // the cors will be changed to the front end url  in production environnement
   const app = await NestFactory.create(AppModule, {
     cors: {
-      origin: process.env.FRONTENT_URL || 'http://localhost:5372',
+      origin: process.env.FRONTEND_URL || 'http://localhost:5372',
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
       credentials: true,
     },
@@ -65,8 +65,6 @@ async function bootstrap() {
   //FILTERS
   app.useGlobalFilters(new HttpExceptionFilter());
   // app.useGlobalFilters(new CustomWsExceptionFilter());
-  //app.useGlobalFilters(new ElasticSearchExceptionFilter()); //TODO:figure out what error to catch
-  //--
   app.enableShutdownHooks();
   //Those to are for handling the shutdown of the server
   process.on('SIGINT', () => {

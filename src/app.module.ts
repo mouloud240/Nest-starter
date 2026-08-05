@@ -12,7 +12,6 @@ import { MonitoringModule } from './monitoring/monitoring.module';
 import { SecurityModule } from './security/security.module';
 import { CommonModule } from './common/modules/common.module';
 import { CoreModule } from './core/core.module';
-import elasticSearchConfig from './config/elastic-search.config';
 
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import elasticSearchConfig from './config/elastic-search.config';
         redisConfig,
         authConfig,
         appConfig,
-        elasticSearchConfig,
       ],
     }),
     InfrastructureModule,
