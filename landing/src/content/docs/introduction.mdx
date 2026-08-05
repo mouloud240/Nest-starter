@@ -1,0 +1,47 @@
+---
+title: Introduction
+description: What create-nest-starter is, what it scaffolds, and what you get out of the box.
+---
+
+`create-nest-starter` is a command-line tool that scaffolds a production-ready
+NestJS backend. Run it, answer a couple of prompts, and you get a working
+application you can build on.
+
+## What you get
+
+The generated project ships with:
+
+- **Express + REST** — a NestJS API with URI versioning (`/api/v1`).
+- **Auth-ready** — Passport local and Google OAuth strategies, Redis-backed
+  sessions, guards, DTO validation, email-verification codes, and password
+  reset.
+- **WebSocket gateway** — socket.io with gated, session-authenticated
+  connections and per-user rooms for 1-to-1 messaging.
+- **Background jobs** — BullMQ queues for mail and upload processing.
+- **Mailer** — `@nestjs-modules/mailer` with Handlebars templates for
+  verification and password-reset emails.
+- **Prod-grade abstractions** — repository pattern (`USER_REPOSITORY` token)
+  and an injectable upload service, so you swap implementations without
+  touching callers.
+- **Testing suite** — Suites-based unit tests (`TestBed.solitary`) with a
+  configured Jest setup.
+- **Security baseline** — Helmet, CSRF double-submit cookies, global rate
+  limiting with Redis-backed storage.
+- **Observability** — Swagger/Scalar docs at `/api-docs`, Terminus health
+  checks, Winston logging with request context.
+
+## Boots without a database
+
+Persistence is a no-op stub by default. `USER_REPOSITORY` resolves to an
+in-memory repository, so the app boots and runs before you decide how to store
+users. Swap in a real repository when you are ready.
+
+## What it is not
+
+No database, no ORM, no opinion about your frontend. The baseline stays small
+and swappable — you add what your project needs.
+
+## Next steps
+
+Dive into the [Quickstart](/docs/quickstart/) to scaffold your first project in
+under a minute.
