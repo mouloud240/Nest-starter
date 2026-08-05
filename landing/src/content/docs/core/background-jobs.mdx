@@ -63,7 +63,7 @@ async sendVerificationEmail(user: User) {
 
 ## Processors
 
-Processors are NestJS providers decorated with `@Processor(queueName)` and `@Process(jobName)`.
+Processors are NestJS providers decorated with `@Processor(queueName)` and `@Process(jobName)`. They live under `src/infrastructure/queue/` in files ending with `.processor.ts`.
 
 ```typescript title="src/infrastructure/queue/mail/mail.processor.ts"
 @Processor(QUEUE_NAME.MAIL)
@@ -78,6 +78,28 @@ export class MailProcessor {
 ```
 
 The upload processor injects `UPLOAD_SERVICE` and delegates file operations. The default `NoopUploader` throws, so you must provide a real implementation before upload jobs will run.
+
+## Auto-registration
+
+`QueueModule` scans `src/infrastructure/queue/**/*.processor.ts` at startup and registers every exported class as a provider automatically. You do not need to add new processors to `QueueModule.providers`.
+
+To add a new processor, create a file matching the pattern and export the processor class:
+
+```typescript title="src/infrastructure/queue/reports/reports.processor.ts"
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
+
+@Processor('reports')
+export class ReportsProcessor extends WorkerHost {
+  async process(job: Job) {
+    // handle report job
+  }
+}
+```
+
+Remember to register the queue name with `BullModule.registerQueue({ name: 'reports' })` if it is not already in the `QUEUE_NAME` enum.
+
+Keep DTOs and helper functions in separate files so they are not registered as providers.
 
 ## Retries and concurrency
 

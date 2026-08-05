@@ -71,19 +71,46 @@ async currentUser(@CurrentUser() user: User) {
 
 ## LocalGuard in GraphQL
 
-The GraphQL variant includes a local guard that returns the request from the GraphQL context:
+The GraphQL variant reuses the same `LocalGuard` as REST. The only difference is that it maps the GraphQL `loginInput` argument onto `request.body` so Passport's local strategy can read the credentials.
 
-```typescript
+```typescript title="src/core/authentication/guards/local.guard.ts (GraphQL variant)"
 @Injectable()
 export class LocalGuard extends AuthGuard('local') {
-  getRequest(context: ExecutionContext) {
+  getRequest(context: ExecutionContext): any {
     const ctx = GqlExecutionContext.create(context);
-    return ctx.getContext().req || context.switchToHttp().getRequest();
+    const request = (ctx.getContext<{ req?: any }>()?.req ||
+      context.switchToHttp().getRequest<any>()) as { body?: any };
+
+    // GraphQL passes credentials as args; passport-local expects them on body.
+    if (ctx.getContext<{ req?: any }>()?.req) {
+      const args = ctx.getArgs<{ loginInput?: { email?: string; password?: string } }>();
+      if (args.loginInput) {
+        request.body = {
+          email: args.loginInput.email,
+          password: args.loginInput.password,
+        };
+      }
+    }
+
+    return request;
   }
 }
 ```
 
-In practice, the login resolver does not use it because GraphQL requests do not populate `req.body` for Passport. Instead, it calls `validateUser` directly.
+Because `request.body` is populated from `args.loginInput`, the login resolver can use the same `@UseGuards(LocalGuard)` and `@CurrentUser()` pattern as the REST controller:
+
+```typescript title="src/core/authentication/authentication.resolver.ts"
+@UseGuards(LocalGuard)
+@Mutation(() => AuthResponseType)
+async login(
+  @Context() ctx: { req: SessionRequest },
+  @CurrentUser() user: User,
+): Promise<AuthResponseType> {
+  return this.authenticationService.login(ctx.req, user);
+}
+```
+
+The guard validates the user and attaches it to the request, exactly like the REST endpoint.
 
 ## Context shape
 

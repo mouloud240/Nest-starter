@@ -9,7 +9,7 @@ import redisConfig from 'src/config/redis.config';
   imports: [
     DbModule,
     UploadModule,
-    QueueModule,
+    QueueModule.register(),
     RedisModule.registerAsync(redisConfig.asProvider()),
   ],
   exports: [RedisModule, QueueModule, UploadModule, DbModule],

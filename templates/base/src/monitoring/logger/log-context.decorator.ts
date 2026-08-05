@@ -45,7 +45,7 @@ export function LogContext(options: LogContextOptions = {}) {
       if (options.args) {
         options.args.forEach((key, index) => {
           if (args[index] !== undefined) {
-            // Pass raw objects; Winston/Loki handles serialization
+            // Pass raw objects; Pino handles serialization
             context[key] = args[index];
           }
         });

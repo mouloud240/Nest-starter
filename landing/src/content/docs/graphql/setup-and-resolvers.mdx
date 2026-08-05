@@ -54,21 +54,18 @@ A resolver is a NestJS provider decorated with `@Resolver`. It injects services 
 export class AuthenticationResolver {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
+  @UseGuards(LocalGuard)
   @Mutation(() => AuthResponseType)
   async login(
-    @Args('loginInput') loginInput: LoginInput,
     @Context() ctx: { req: SessionRequest },
+    @CurrentUser() user: User,
   ): Promise<AuthResponseType> {
-    const user = await this.authenticationService.validateUser(
-      loginInput.email,
-      loginInput.password,
-    );
     return this.authenticationService.login(ctx.req, user);
   }
 }
 ```
 
-Login bypasses Passport because GraphQL requests do not populate `req.body` the way REST does. The resolver validates the user directly and writes the session.
+Login uses the same `LocalGuard` as the REST controller. The GraphQL guard maps `args.loginInput` onto `request.body` before Passport validates the credentials, so the resolver can use `@CurrentUser()` and the same `AuthenticationService.login` flow.
 
 ### User resolver
 

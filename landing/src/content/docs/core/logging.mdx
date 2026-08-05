@@ -1,23 +1,23 @@
 ---
 title: Logging
-description: How Winston, request IDs, and AsyncLocalStorage are wired together.
+description: How Pino, request IDs, and AsyncLocalStorage are wired together.
 ---
 
-Logging uses Winston with a request-scoped context. The `LoggerInterceptor` creates a `requestId` at the start of each HTTP request, stores it in `AsyncLocalStorage`, and the logger builder includes it in every log line emitted during that request.
+Logging uses Pino with a request-scoped context. The `LoggerInterceptor` creates a `requestId` at the start of each HTTP request, stores it in `AsyncLocalStorage`, and the Pino logger mixin includes it in every log line emitted during that request.
 
 ## How it works
 
 1. The interceptor starts a timer and reads the client IP.
 2. It generates a `requestId` (or accepts one from the `x-request-id` header).
 3. It runs the request inside an `AsyncLocalStorage` context.
-4. The logger builder reads the store and appends `requestId` to the log line.
+4. Pino's `mixin` reads the store and adds `requestId` to the log line.
 5. On response, the interceptor logs the duration and status code.
 
 This means a single request spans multiple log lines with the same ID, which is useful for tracing errors through guards, services, and repositories.
 
 ## Using the logger
 
-Inject the builder and call `build()` to get a NestJS-compatible logger:
+`LoggerServiceBuilder` creates a NestJS-compatible logger backed by Pino:
 
 ```typescript
 const logger = app.get(LoggerServiceBuilder).build();
@@ -28,11 +28,26 @@ Inside any provider, use NestJS's standard `Logger` or inject the same builder. 
 
 ## Log format
 
-The console transport outputs JSON-formatted logs with timestamp, level, optional `requestId`, and message:
+In development, `pino-pretty` prints readable logs:
 
 ```
-[2025-...] [info] [requestId: abc-123] : Request started from IP: ..., Path: /api/v1/authentication/login, Method: POST at ...
-[2025-...] [info] [requestId: abc-123] : Response completed in 23ms 🔥 with Status:200
+[2025-...] INFO (12345): Request started from IP: ..., Path: /api/v1/authentication/login, Method: POST at ...
+    requestId: "abc-123"
+[2025-...] INFO (12345): Response completed in 23ms 🔥 with Status:200
+    requestId: "abc-123"
+```
+
+In production, Pino outputs JSON:
+
+```json
+{
+  "level": 30,
+  "time": 1234567890123,
+  "pid": 12345,
+  "hostname": "...",
+  "requestId": "abc-123",
+  "msg": "Response completed in 23ms 🔥 with Status:200"
+}
 ```
 
 ## Adding context
@@ -45,4 +60,8 @@ The `LogContext` decorator wraps a method and auto-logs entry, duration, success
 
 ## Adding transports
 
-The `LoggerServiceBuilder` is designed to accept more transports. Uncomment or add Winston transports for file, Loki, or a cloud provider. Because the builder is constructed once, the transport is shared across the application.
+Pino supports transports for file output, log aggregation, or cloud providers. You can add a transport by changing the `transport` option in `LoggerServiceBuilder`. For production, the default configuration leaves `transport` undefined so Pino writes JSON to stdout, which is the best default for containerized environments.
+
+## Log level
+
+Set the `LOG_LEVEL` environment variable to change the minimum level. The default is `info`. Valid levels follow Pino's defaults: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`.

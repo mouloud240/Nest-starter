@@ -3,11 +3,13 @@ import { UseGuards } from '@nestjs/common';
 import { AuthenticationService } from './v1/authentication.service';
 import { AuthResponseType } from './graphql/types/auth-response.type';
 import { MessageResponseType } from './graphql/types/message-response.type';
-import { LoginInput } from './graphql/inputs/login.input';
 import { RegisterInput } from './graphql/inputs/register.input';
 import { VerifyEmailInput } from './graphql/inputs/verify-email.input';
 import { ResetPasswordInput } from './graphql/inputs/reset-password.input';
+import { LocalGuard } from './guards/local.guard';
 import { SessionAuthGuard } from './guards/session.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { User } from '../user/entities/user.entity';
 import { SessionRequest } from './types/session-request.type';
 
 /**
@@ -26,19 +28,14 @@ import { SessionRequest } from './types/session-request.type';
 export class AuthenticationResolver {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
+  @UseGuards(LocalGuard)
   @Mutation(() => AuthResponseType, {
     description: 'Login user and create a server-side session',
   })
   async login(
-    @Args('loginInput') loginInput: LoginInput,
     @Context() ctx: { req: SessionRequest },
+    @CurrentUser() user: User,
   ): Promise<AuthResponseType> {
-    // passport-local reads credentials from the HTTP body, which is not
-    // populated for GraphQL requests, so validate directly instead
-    const user = await this.authenticationService.validateUser(
-      loginInput.email,
-      loginInput.password,
-    );
     return this.authenticationService.login(ctx.req, user);
   }
 
