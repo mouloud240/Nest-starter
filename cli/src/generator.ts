@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TEMPLATE_DIR = path.resolve(__dirname, '..', 'templates', 'base');
+const TEMPLATES_DIR = path.resolve(__dirname, '..', 'templates');
 
 const IGNORED = new Set([
   'node_modules',
@@ -15,13 +15,16 @@ const IGNORED = new Set([
   'pnpm-lock.yaml',
 ]);
 
+export type Variant = 'rest' | 'graphql';
+
 export interface CreateProjectOptions {
   projectName: string;
   targetDir: string;
+  variant?: Variant;
 }
 
 export async function createProject(options: CreateProjectOptions) {
-  const { projectName, targetDir } = options;
+  const { projectName, targetDir, variant = 'rest' } = options;
   const dest = path.resolve(targetDir);
 
   if (existsSync(dest)) {
@@ -29,19 +32,31 @@ export async function createProject(options: CreateProjectOptions) {
   }
 
   await mkdir(dest, { recursive: true });
-  await cp(TEMPLATE_DIR, dest, {
+  await cp(path.join(TEMPLATES_DIR, 'base'), dest, {
     recursive: true,
     filter: (src) => !IGNORED.has(path.basename(src)),
   });
 
   const pkgPath = path.join(dest, 'package.json');
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
+
+  if (variant === 'graphql') {
+    const overlay = path.join(TEMPLATES_DIR, 'graphql');
+    await cp(overlay, dest, {
+      recursive: true,
+      filter: (src) =>
+        path.basename(src) !== 'package.json' &&
+        !IGNORED.has(path.basename(src)),
+    });
+    const overlayPkg = JSON.parse(
+      await readFile(path.join(overlay, 'package.json'), 'utf8'),
+    );
+    pkg.dependencies = { ...pkg.dependencies, ...overlayPkg.dependencies };
+  }
+
   pkg.name = projectName;
   await writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
-  const envExample = await readFile(
-    path.join(dest, '.env.example'),
-    'utf8',
-  );
+  const envExample = await readFile(path.join(dest, '.env.example'), 'utf8');
   await writeFile(path.join(dest, '.env'), envExample);
 }

@@ -1,6 +1,7 @@
 # compiled output
 /dist
 templates/base
+templates/graphql
 
 # dependencies
 node_modules

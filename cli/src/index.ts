@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import {
   intro,
   outro,
   text,
-  confirm,
+  select,
   isCancel,
 } from '@clack/prompts';
 import pc from 'picocolors';
-import { createProject } from './generator.js';
+import { createProject, Variant } from './generator.js';
 
 export { createProject } from './generator.js';
 
@@ -56,36 +57,33 @@ async function main() {
     projectName = String(result);
   }
 
-  let targetDir = args['target-dir'];
-  if (!targetDir) {
-    const result = await text({
-      message: 'Where should the project be created?',
-      placeholder: projectName,
-      defaultValue: projectName,
+  let variant: Variant =
+    args['variant'] === 'graphql' ? 'graphql' : 'rest';
+  if (!args['variant'] && !args['target-dir']) {
+    const result = await select({
+      message: 'Which variant?',
+      options: [
+        { value: 'rest', label: 'Express + REST (default)' },
+        { value: 'graphql', label: 'GraphQL (Apollo)' },
+      ],
+      initialValue: 'rest',
     });
     if (isCancel(result)) {
       outro(pc.red('Cancelled'));
       process.exit(0);
     }
-    targetDir = String(result);
+    variant = result as Variant;
   }
 
-  if (!args['target-dir']) {
-    const confirmed = await confirm({
-      message: `Create project at ${pc.cyan(targetDir)}?`,
-      initialValue: true,
-    });
-    if (isCancel(confirmed) || !confirmed) {
-      outro(pc.red('Cancelled'));
-      process.exit(0);
-    }
-  }
+  // Create the project next to where the command is run, named after the
+  // project. `--target-dir` overrides this for automation.
+  const targetDir = args['target-dir'] ?? path.join(process.cwd(), projectName);
 
-  await createProject({ projectName, targetDir });
+  await createProject({ projectName, targetDir, variant });
 
   outro(
     pc.green(
-      `Project created at ${pc.cyan(targetDir)}.\nRun:\n  cd ${targetDir}\n  pnpm install\n  cp .env.example .env\n  pnpm start:dev`,
+      `Project created at ${pc.cyan(targetDir)}.\nRun:\n  cd ${projectName}\n  pnpm install\n  cp .env.example .env\n  pnpm start:dev`,
     ),
   );
 }
