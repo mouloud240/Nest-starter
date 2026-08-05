@@ -27,3 +27,7 @@ You can add this yourself by installing `joi` and passing a `validationSchema` t
 JWT-based auth was removed in favor of session-based auth. Sessions work better for the starter's default real-time WebSocket pattern and avoid refresh-token complexity. However, some users still prefer JWT, so the plan is to add an optional JWT module that you can enable instead of the default session-based flow.
 
 When this lands, it will be opt-in and will not replace the current session implementation.
+
+## AI-friendly development
+
+The starter already relies on strict typing, opinionated patterns, and clear documentation. These qualities work well with AI agents, but the plan is to do more. Future releases will ship an `AGENTS.md` file alongside the generated project, a set of skills, and extra documentation that help agents produce less slop and generate code that matches the starter's conventions and quality standards.
