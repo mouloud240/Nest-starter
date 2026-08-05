@@ -1,0 +1,16 @@
+# compiled output
+/dist
+templates/base
+
+# dependencies
+node_modules
+
+# logs
+*.log
+
+# editor
+.vscode
+.idea
+
+# os
+.DS_Store

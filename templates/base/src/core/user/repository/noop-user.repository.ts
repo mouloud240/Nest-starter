@@ -1,0 +1,37 @@
+import { Injectable } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
+import { registerDto } from 'src/core/authentication/v1/dtos/requests/register.dto';
+import { User } from '../entities/user.entity';
+import { UserRepositoryInterface } from './user.respository-interface';
+
+@Injectable()
+export class NoopUserRepository implements UserRepositoryInterface {
+  private readonly users: User[] = [];
+
+  findByEmail(email: string): Promise<User | null> {
+    return Promise.resolve(this.users.find((u) => u.email === email) ?? null);
+  }
+
+  createUser(data: registerDto): Promise<User> {
+    const user = new User();
+    user.id = uuidv4();
+    user.email = data.email;
+    user.password = data.password;
+    user.isMailVerified = false;
+    this.users.push(user);
+    return Promise.resolve(user);
+  }
+
+  findById(id: string): Promise<User | null> {
+    return Promise.resolve(this.users.find((u) => u.id === id) ?? null);
+  }
+
+  updateUser(user: User): Promise<User> {
+    const index = this.users.findIndex((u) => u.id === user.id);
+    if (index === -1) {
+      return Promise.resolve(user);
+    }
+    this.users[index] = user;
+    return Promise.resolve(user);
+  }
+}

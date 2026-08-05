@@ -79,11 +79,6 @@ alwaysApply: true
 - Provide method descriptions and return types
 - Document module overviews and folder structures
 
-### Change Logging
-- Log all AI-generated changes to `ai_logs/<today_date_utc>.md`
-- Include: prompt text, git author name, main file changes, highlights, line constraints
-- Essential for debugging and tracking changes
-
 ### Best Practices
 - Write clean, maintainable code
 - Use meaningful variable names

@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build base template
+        run: pnpm build:base
+
+      - name: Test base template
+        run: pnpm --filter nestjs-starter-base test
+
+      - name: Build CLI
+        run: pnpm build:cli
+
+      - name: Generate a project from the CLI
+        run: |
+          rm -rf /tmp/generated-project
+          node cli/dist/index.js --project-name generated-project --target-dir /tmp/generated-project
+
+      - name: Install generated project
+        working-directory: /tmp/generated-project
+        run: pnpm install
+
+      - name: Build generated project
+        working-directory: /tmp/generated-project
+        run: pnpm build
+
+      - name: Test generated project
+        working-directory: /tmp/generated-project
+        run: pnpm test

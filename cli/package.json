@@ -1,0 +1,34 @@
+{
+  "name": "create-nest-starter",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Interactive CLI to scaffold a NestJS starter project.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-nest-starter": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "copy-templates": "node copy-templates.mjs",
+    "build": "pnpm copy-templates && tsup src/index.ts --format esm --clean --dts",
+    "dev": "pnpm copy-templates && tsup src/index.ts --format esm --watch",
+    "start": "node dist/index.js",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.10.0",
+    "picocolors": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.0"
+  }
+}
