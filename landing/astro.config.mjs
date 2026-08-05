@@ -102,6 +102,12 @@ export default defineConfig({
 						{ label: 'CLI options', link: '/docs/reference/cli-options/' },
 					],
 				},
+				{
+					label: 'Coming soon',
+					items: [
+						{ label: 'Roadmap', link: '/docs/coming-soon/' },
+					],
+				},
 			],
 		}),
 	],

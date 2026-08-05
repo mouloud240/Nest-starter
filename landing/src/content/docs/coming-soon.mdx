@@ -1,0 +1,29 @@
+---
+title: Coming soon
+description: Features that are planned for future releases.
+---
+
+These features are not in the starter yet. They are listed here so you know what is planned and can decide whether to wait for them or implement them yourself.
+
+## Database adapters
+
+The starter currently boots with an in-memory `NoopUserRepository`. The plan is to add optional adapters for real databases:
+
+- **TypeORM** — for users who want a full ORM with migrations and decorators.
+- **Drizzle** — for a lightweight, SQL-first query builder.
+- **Prisma** — for schema-first development and generated clients.
+- **MikroORM** — much later, because it adds more concepts and a different mental model.
+
+You can already replace `USER_REPOSITORY` with your own implementation today; these adapters will be provided as drop-in options later.
+
+## Environment variable validation
+
+`ConfigModule.forRoot` currently loads `.env` values without validation. The plan is to add an optional Joi schema so missing or invalid values fail at boot time with a clear message instead of later at runtime.
+
+You can add this yourself by installing `joi` and passing a `validationSchema` to `ConfigModule.forRoot`.
+
+## Optional JWT authentication
+
+JWT-based auth was removed in favor of session-based auth. Sessions work better for the starter's default real-time WebSocket pattern and avoid refresh-token complexity. However, some users still prefer JWT, so the plan is to add an optional JWT module that you can enable instead of the default session-based flow.
+
+When this lands, it will be opt-in and will not replace the current session implementation.
