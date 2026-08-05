@@ -12,7 +12,6 @@ import {
 } from 'src/common/utils/authentication/hash.utils';
 import { AuthResponseDto } from './dtos/responses/auth-response.dto';
 import { registerDto } from './dtos/requests/register.dto';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
 import { RedisService } from 'nestjs-redis-client';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -24,13 +23,13 @@ import authConfig from 'src/config/auth.config';
 import { Profile } from 'passport-google-oauth20';
 import { UserService } from 'src/core/user/v1/user.service';
 import { User } from 'src/core/user/entities/user.entity';
+import { SessionRequest } from '../types/session-request.type';
 
 @Injectable()
 export class AuthenticationService {
   logger = new Logger(AuthenticationService.name);
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
     @Inject(authConfig.KEY) authenicationConfig: ConfigType<typeof authConfig>,
     private readonly redisService: RedisService,
     @InjectQueue(QUEUE_NAME.MAIL) private readonly mailQueue: Queue,
@@ -49,35 +48,26 @@ export class AuthenticationService {
     }
     return user;
   }
-  async issueTokens(user: User): Promise<AuthResponseDto> {
-    try {
-      const { id, email } = user;
-      const accessTokenPayload = { sub: id, email };
-      const refreshTokenPayload = { sub: id, email, type: 'refresh' };
 
-      const jwtConfig = authConfig().jwt;
-
-      const [accessToken, refreshToken] = await Promise.all([
-        this.jwtService.signAsync(accessTokenPayload, {
-          expiresIn: jwtConfig.accessTokenExpiresIn,
-          secret: jwtConfig.accessTokenSecret,
-        }),
-        this.jwtService.signAsync(refreshTokenPayload, {
-          expiresIn: jwtConfig.refreshTokenExpiresIn,
-          secret: jwtConfig.refreshTokenSecret,
-        }),
-      ]);
-
-      return {
-        accessToken,
-        refreshToken,
-        user: user,
-      };
-    } catch (error) {
-      this.logger.error('Error issuing tokens', error);
-      throw new Error('Failed to issue tokens');
-    }
+  async login(
+    request: SessionRequest,
+    user: User,
+  ): Promise<AuthResponseDto> {
+    request.session.userId = user.id;
+    return { user };
   }
+
+  async logout(request: SessionRequest): Promise<{ message: string }> {
+    return new Promise((resolve, reject) => {
+      request.session.destroy((err) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve({ message: 'Logged out successfully' });
+      });
+    });
+  }
+
   async registerUser(data: registerDto) {
     const user = await this.userService.createUser(data);
     await this.sendVerificationCode(user);

@@ -1,97 +1,90 @@
-import { Inject, Logger } from '@nestjs/common';
-import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-import { JwtService } from '@nestjs/jwt';
-import { Socket } from 'socket.io';
-import { isString } from 'node:util';
-import { AccessTokenPayload } from '../authentication/interfaces/access-token-payload.interface';
+import { Inject, Logger, UseGuards } from '@nestjs/common';
+import {
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
+import { ConfigService } from '@nestjs/config';
+import { parse } from 'cookie';
+import { Server, Socket } from 'socket.io';
+import { RedisService } from 'nestjs-redis-client';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/v1/user.service';
+import { AuthConfig } from 'src/config/interfaces/auth-config.interface';
 
+@WebSocketGateway()
 export class WsConnectionsManagerGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  @WebSocketServer()
+  server: Server;
   private readonly logger = new Logger(WsConnectionsManagerGateway.name);
   @Inject(UserService)
   private readonly userService: UserService;
-  @Inject(JwtService)
-  private readonly jwtService: JwtService;
+  @Inject(RedisService)
+  private readonly redisService: RedisService;
+  @Inject(ConfigService)
+  private readonly configService: ConfigService;
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client ${client.id} disconnect`);
     client.rooms.clear();
   }
+
   async handleConnection(client: Socket) {
-    const token = this.extractTokenFromSocket(client);
-    if (!token) {
+    const sessionId = this.extractSessionIdFromSocket(client);
+    if (!sessionId) {
+      this.logger.log('No session cookie provided');
       client.disconnect(true);
-      this.logger.log('no AccessToken provided');
       return;
     }
-    const payload = await this.validateToken(token);
-    if (!payload) {
-      client.disconnect();
-      return;
-    }
-    const user = await this.validateUser(payload.sub);
-    if (!user) {
-      client.disconnect();
-      return;
-    }
-    const userPayload: AccessTokenPayload['user'] = {
-      id: user.id,
-      email: user.email,
-    };
-    const getuserRooms = this.getUserRoomFromSocket(client);
-    client['user'] = userPayload;
-    await client.join(getuserRooms);
-  }
-  getUserRoomFromSocket(client: Socket): string {
-    const user = client['user'] as AccessTokenPayload['user'];
-    if (!user) {
+    const userId = await this.resolveUserIdFromSession(sessionId);
+    if (!userId) {
+      this.logger.log('Invalid session');
       client.disconnect(true);
+      return;
     }
-    const userRoom = `user_${user.id}`;
-    return userRoom;
-  }
-  getUserFromSocket(client: Socket): AccessTokenPayload['user'] {
-    return client['user'] as AccessTokenPayload['user'];
-  }
-
-  extractTokenFromSocket(client: Socket): string | null {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const RawToken =
-      client.handshake.auth['token'] ||
-      client.handshake.headers['authorization'];
-    if (!RawToken) {
-      return null;
-    }
-    if (!isString(RawToken)) {
-      return null;
-    }
-
-    const [claim, token] = RawToken.split(' ') || [];
-
-    if (claim !== 'Bearer') {
-      return null;
-    }
-
-    return token || null;
-  }
-  async validateUser(userId: string): Promise<User | null> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      return null;
+      this.logger.log('User not found');
+      client.disconnect(true);
+      return;
     }
-    return user;
+    client['user'] = user;
+    await client.join(`user_${user.id}`);
   }
-  async validateToken(token: string): Promise<AccessTokenPayload | null> {
-    try {
-      const payload =
-        await this.jwtService.verifyAsync<AccessTokenPayload>(token);
-      return payload;
-    } catch (e) {
-      this.logger.error('Token validation error', e);
+
+  private extractSessionIdFromSocket(client: Socket): string | null {
+    const rawCookie = client.handshake.headers.cookie;
+    if (!rawCookie) {
       return null;
     }
+    const authConfig = this.configService.get<AuthConfig>('auth');
+    const cookieName = authConfig?.session?.name ?? 'sid';
+    const parsed = parse(rawCookie);
+    const value = parsed[cookieName];
+    return value ?? null;
+  }
+
+  private async resolveUserIdFromSession(
+    sessionId: string,
+  ): Promise<string | null> {
+    try {
+      // ponytail: default connect-redis key prefix. If you change the store prefix, update this.
+      const raw = await this.redisService.get<string>(`sess:${sessionId}`);
+      if (!raw) {
+        return null;
+      }
+      const session = JSON.parse(raw) as { userId?: string };
+      return session.userId ?? null;
+    } catch (e) {
+      this.logger.error('Session resolution error', e);
+      return null;
+    }
+  }
+
+  getUserFromSocket(client: Socket): User {
+    return client['user'] as User;
   }
 }

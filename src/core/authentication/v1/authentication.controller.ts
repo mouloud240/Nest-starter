@@ -1,13 +1,21 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { registerDto } from './dtos/requests/register.dto';
 import { ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthResponseDto } from './dtos/responses/auth-response.dto';
 import { LocalGuard } from '../guards/local.guard';
-import { USER } from '../decorators/user.decorartor';
+import { CurrentUser } from '../decorators/current-user.decorator';
 import { User } from 'src/core/user/entities/user.entity';
-import { RefreshTokenGuard } from '../guards/refresh-token.guard';
+import { SessionAuthGuard } from '../guards/session.guard';
 import { GoogleGuard } from '../guards/oauth/google.guard';
+import { SessionRequest } from '../types/session-request.type';
 
 @Controller('authentication')
 export class AuthenticationController {
@@ -16,10 +24,10 @@ export class AuthenticationController {
   @Post('login')
   @ApiOperation({
     summary: 'Login user',
-    description: 'Logs in a user and issues access and refresh tokens.',
+    description: 'Logs in a user and creates a server-side session.',
   })
   @ApiOkResponse({
-    description: 'Returns the access token, refresh token, and user details.',
+    description: 'Returns the authenticated user details.',
     type: () => AuthResponseDto,
   })
   @ApiResponse({
@@ -31,16 +39,18 @@ export class AuthenticationController {
     description:
       'Bad Request. The request body is invalid or missing required fields.',
   })
-  async login(@USER() user: User) {
-    return this.authenticationService.issueTokens(user);
+  async login(
+    @Req() request: SessionRequest,
+    @CurrentUser() user: User,
+  ) {
+    return this.authenticationService.login(request, user);
   }
   @ApiOperation({
     summary: 'Register user',
-    description: 'Registers a new user and issues access and refresh tokens.',
+    description: 'Registers a new user and sends a verification email.',
   })
   @ApiOkResponse({
-    description: 'Returns the access token, refresh token, and user details.',
-    type: () => AuthResponseDto,
+    description: 'Returns a success message.',
   })
   @ApiResponse({
     status: 400,
@@ -51,23 +61,18 @@ export class AuthenticationController {
   async register(@Body() data: registerDto) {
     return this.authenticationService.registerUser(data);
   }
-  @UseGuards(RefreshTokenGuard)
-  @Post('refresh')
+
+  @Post('logout')
+  @UseGuards(SessionAuthGuard)
   @ApiOperation({
-    summary: 'Refresh tokens',
-    description:
-      'Refreshes access and refresh tokens using a valid refresh token.',
+    summary: 'Logout user',
+    description: 'Destroys the current server-side session.',
   })
   @ApiOkResponse({
-    description: 'Returns the new access token and refresh token.',
-    type: () => AuthResponseDto,
+    description: 'Returns a success message.',
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized. Invalid refresh token provided.',
-  })
-  async refreshTokens(@USER() user: User) {
-    return this.authenticationService.issueTokens(user);
+  async logout(@Req() request: SessionRequest) {
+    return this.authenticationService.logout(request);
   }
 
   @Post('resend-verification')
@@ -151,7 +156,10 @@ export class AuthenticationController {
 
   @UseGuards(GoogleGuard)
   @Get('oauth/google/callback')
-  googleAuthRedirect(@USER() user: User) {
-    return this.authenticationService.issueTokens(user);
+  async googleAuthRedirect(
+    @Req() request: SessionRequest,
+    @CurrentUser() user: User,
+  ) {
+    return this.authenticationService.login(request, user);
   }
 }

@@ -1,11 +1,15 @@
 import { StrategyOptions as StrategyOptionsGoogle } from 'passport-google-oauth20';
 
 export interface AuthConfig {
-  jwt: {
-    accessTokenSecret: string;
-    refreshTokenSecret: string;
-    accessTokenExpiresIn: number; // in seconds
-    refreshTokenExpiresIn: number; // in seconds
+  session: {
+    secret: string;
+    name: string;
+    cookie: {
+      httpOnly: boolean;
+      secure: boolean;
+      sameSite: boolean | 'lax' | 'strict' | 'none';
+      maxAge: number;
+    };
   };
   oauth: {
     google: StrategyOptionsGoogle;
