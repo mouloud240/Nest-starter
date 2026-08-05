@@ -1,6 +1,6 @@
 # Choosing a Starter Variant
 
-The repo is a monorepo that ships a CLI (`create-nest-starter`). The
+The repo is a monorepo that ships a CLI (`create-nestforge`). The
 CLI currently scaffolds a single variant (Express + REST + Redis sessions). More
 variants are planned as template overlays.
 
@@ -12,13 +12,13 @@ variants are planned as template overlays.
 ## How to get the starter
 
 ```bash
-npx create-nest-starter
+npx create-nestforge
 ```
 
 Or run the CLI from this repo:
 
 ```bash
-pnpm --filter create-nest-starter start
+pnpm --filter create-nestforge start
 ```
 
 ## Planned variants
@@ -35,8 +35,8 @@ implementations they will be derived from.
 You can clone the reference branches directly:
 
 ```bash
-git clone -b fastify https://github.com/your-org/nestjs-starter.git
-git clone -b graphql https://github.com/your-org/nestjs-starter.git
+git clone -b fastify https://github.com/mouloud240/NestForge.git
+git clone -b graphql https://github.com/mouloud240/NestForge.git
 ```
 
 These are the source variants the templates are derived from; they are not the
