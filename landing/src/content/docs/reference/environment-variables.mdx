@@ -1,0 +1,95 @@
+---
+title: Environment variables
+description: Supported environment variables in the generated app.
+---
+
+The generated project reads configuration from a `.env` file. Copy `.env.example` to `.env` after scaffolding and fill in the values for your environment.
+
+## Core app
+
+| Variable | Purpose | Example |
+| --- | --- | --- |
+| `NODE_ENV` | Runtime environment | `development`, `production`, `test` |
+| `PORT` | Port the app listens on | `3000` |
+| `AUTHOR` | Application author or maintainer | `your-name` |
+| `BACKEND_URL` | Base URL of the backend | `http://localhost:3000` |
+| `BACKEND_API_URL` | API base URL | `${BACKEND_URL}/api/v1` |
+| `FRONTEND_URL` | Allowed frontend origin for CORS | `http://localhost:5173` |
+
+## Database
+
+| Variable | Purpose | Example |
+| --- | --- | --- |
+| `DB_HOST` | Database host | `localhost` |
+| `DB_PORT` | Database port | `5432` |
+| `DB_USERNAME` | Database user | `app` |
+| `DB_PASSWORD` | Database password | `...` |
+| `DB_NAME` | Database name | `nestforge` |
+| `POSTGRES_USER` | Postgres root user | `postgres` |
+| `POSTGRES_PASSWORD` | Postgres root password | `...` |
+| `POSTGRES_DB` | Default Postgres database | `postgres` |
+
+The `DB_*` variables are included in the example file for a future database integration. The starter boots with the in-memory repository and does not require a database.
+
+## Redis
+
+| Variable | Purpose | Example |
+| --- | --- | --- |
+| `REDIS_HOST` | Redis host | `localhost` |
+| `REDIS_PORT` | Redis port | `6379` |
+
+Redis is required for sessions, rate limiting, queues, and WebSocket session resolution.
+
+## Email
+
+| Variable | Purpose | Example |
+| --- | --- | --- |
+| `MAIL_USER` | SMTP account | `you@gmail.com` |
+| `MAIL_PASS` | SMTP password or app password | `...` |
+| `MAIL_HOST` | SMTP server host | `smtp.gmail.com` |
+| `MAIL_PORT` | SMTP server port | `587` |
+| `MAIL_SECURE` | Use TLS | `true` or `false` |
+
+## Authentication
+
+### Google OAuth
+
+| Variable | Purpose | Example |
+| --- | --- | --- |
+| `GOOGLE_OAUTH_CLIENT_ID` | Google OAuth client ID | `...` |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth client secret | `...` |
+| `GOOGLE_OAUTH_CALLBACK_URL` | Callback URL | `${BACKEND_API_URL}/authentication/oauth/google/callback` |
+
+### GitHub OAuth
+
+| Variable | Purpose | Example |
+| --- | --- | --- |
+| `GITHUB_OAUTH_CLIENT_ID` | GitHub OAuth client ID | `...` |
+| `GITHUB_OAUTH_CLIENT_SECRET` | GitHub OAuth client secret | `...` |
+| `GITHUB_OAUTH_CALLBACK_URL` | Callback URL | `${BACKEND_API_URL}/authentication/oauth/github/callback` |
+
+The GitHub OAuth routes are not wired in the current controller. Add them if you need GitHub login.
+
+## Session
+
+| Variable | Purpose | Example |
+| --- | --- | --- |
+| `SESSION_SECRET` | Secret for signing session cookies | `a-long-random-string` |
+| `SESSION_COOKIE_SECURE` | `Secure` flag | `false` in dev, `true` in prod |
+| `SESSION_COOKIE_SAMESITE` | `SameSite` policy | `lax`, `strict`, or `none` |
+| `SESSION_COOKIE_MAX_AGE` | Cookie max age in milliseconds | `86400000` |
+
+## Variable expansion
+
+`ConfigModule.forRoot` is configured with `expandVariables: true`. You can reference variables with `${VAR_NAME}` syntax, such as `${BACKEND_URL}/api/v1`.
+
+## Required for boot
+
+At minimum, you need Redis available and these variables set:
+
+- `REDIS_HOST`
+- `REDIS_PORT`
+- `SESSION_SECRET`
+- `FRONTEND_URL`
+
+The rest depends on which features you enable: SMTP for mail, OAuth credentials for social login, and a database once you replace the in-memory repository.

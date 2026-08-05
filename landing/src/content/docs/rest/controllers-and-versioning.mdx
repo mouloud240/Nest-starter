@@ -1,0 +1,45 @@
+---
+title: Controllers & versioning
+description: How REST controllers and URI versioning are structured.
+---
+
+REST controllers live under `src/core/<feature>/v1/` and use URI versioning. The global prefix is `/api`, and the default version is `v1`, so a feature controller at `authentication` is reachable at `/api/v1/authentication`.
+
+## Enabling versioning
+
+`main.ts` enables URI versioning and sets the global prefix:
+
+```typescript title="src/main.ts"
+app.enableVersioning({
+  type: VersioningType.URI,
+  defaultVersion: '1',
+});
+app.setGlobalPrefix('api', { exclude: ['/api-docs', '/api-docs-json'] });
+```
+
+Swagger is excluded from the prefix so it stays at `/api-docs`.
+
+## Controller example
+
+```typescript title="src/core/user/v1/user.controller.ts"
+@Controller({ path: 'user', version: '1' })
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @Get('me')
+  @UseGuards(SessionAuthGuard)
+  async getCurrentUser(@CurrentUser() user: User) {
+    return this.userService.findById(user.id);
+  }
+}
+```
+
+This controller is reachable at `/api/v1/user/me`.
+
+## Adding a new version
+
+Create a `v2` folder, add the new controller, and annotate routes with `version: '2'`. NestJS will route requests based on the URI segment. You can keep `v1` for backward compatibility while introducing new behavior in `v2`.
+
+## Swagger and Scalar
+
+`main.ts` builds a Swagger document and mounts it through Scalar at `/api-docs`. Operation decorators on controllers define summaries, response types, and status codes. Keep these in sync with the actual behavior so the generated docs are accurate.

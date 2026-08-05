@@ -1,0 +1,88 @@
+---
+title: Background jobs
+description: BullMQ queues, processors, and how to enqueue jobs.
+---
+
+Background jobs are handled by BullMQ. The project registers a global connection and two queues: `mail` and `upload`. Jobs are added to queues from services, and processors run them asynchronously.
+
+## Queue setup
+
+`QueueModule` configures the BullMQ connection using Redis:
+
+```typescript title="src/infrastructure/queue/queue.module.ts"
+BullModule.forRootAsync({
+  useFactory: (configService: ConfigType<typeof redisConfig>) => ({
+    connection: {
+      host: configService.host,
+      port: configService.port,
+      db: 3,
+    },
+  }),
+  inject: [redisConfig.KEY],
+})
+```
+
+It then registers one queue for each entry in the `QUEUE_NAME` enum:
+
+```typescript
+BullModule.registerQueue(
+  ...Object.values(QUEUE_NAME).map((queueName) => ({ name: queueName })),
+)
+```
+
+## Job names
+
+`src/common/constants/jobs.ts` defines the supported job names:
+
+- `MAIL_JOBS.SEND_MAIL`
+- `MAIL_JOBS.SEND_VERIFICATION_MAIL`
+- `MAIL_JOBS.SEND_PASSWORD_RESET_MAIL`
+- `UPLOAD_JOBS.UPLOAD_FILE`
+- `UPLOAD_JOBS.DELETE_FILE`
+
+## Adding a job
+
+Inject the queue by name and add a job:
+
+```typescript
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+
+constructor(
+  @InjectQueue(QUEUE_NAME.MAIL) private readonly mailQueue: Queue,
+) {}
+
+async sendVerificationEmail(user: User) {
+  const otp = await this.generateAndSetOtp(user);
+  await this.mailQueue.add(MAIL_JOBS.SEND_VERIFICATION_MAIL, {
+    to: user.email,
+    code: otp,
+  });
+}
+```
+
+## Processors
+
+Processors are NestJS providers decorated with `@Processor(queueName)` and `@Process(jobName)`.
+
+```typescript title="src/infrastructure/queue/mail/mail.processor.ts"
+@Processor(QUEUE_NAME.MAIL)
+export class MailProcessor {
+  constructor(private readonly emailService: EmailService) {}
+
+  @Process(MAIL_JOBS.SEND_VERIFICATION_MAIL)
+  async handleVerification(job: Job<{ to: string; code: string }>) {
+    await this.emailService.sendVerificationEmail(job.data.to, job.data.code);
+  }
+}
+```
+
+The upload processor injects `UPLOAD_SERVICE` and delegates file operations. The default `NoopUploader` throws, so you must provide a real implementation before upload jobs will run.
+
+## Retries and concurrency
+
+BullMQ uses Redis to store jobs, handles retries, delayed jobs, and worker concurrency automatically. You can configure concurrency per processor and retry policies per job. The default setup is enough for local development and small deployments.
+
+## Monitoring
+
+Use the BullMQ dashboard or your Redis monitoring tools to inspect queued jobs, failures, and retries. The project does not include a built-in UI for BullMQ; add one only if you need it.

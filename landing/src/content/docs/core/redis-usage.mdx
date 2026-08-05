@@ -1,0 +1,57 @@
+---
+title: Redis usage
+description: How Redis is used for sessions, rate limiting, queues, and tokens.
+---
+
+Redis is the shared infrastructure for sessions, rate limiting, BullMQ queues, and short-lived tokens. The app expects Redis to be running before it boots.
+
+## Connection setup
+
+`InfrastructureModule` registers `RedisModule` from `nestjs-redis-client` using the async config from `src/config/redis.config.ts`.
+
+```typescript title="src/infrastructure/infrastructure.module.ts"
+RedisModule.registerAsync(redisConfig.asProvider())
+```
+
+The `isGlobal: true` flag in the config makes the client available globally without re-importing the module.
+
+## Redis database layout
+
+The generated project uses different Redis logical databases to keep concerns separated:
+
+| DB | Use | Configured in |
+| --- | --- | --- |
+| `0` | Default Redis connection (sessions, OTP, password reset tokens) | `redis.config.ts` |
+| `2` | Throttler storage | `security/rate-limiting/rate-limiting.module.ts` |
+| `3` | BullMQ queues | `infrastructure/queue/queue.module.ts` |
+
+Sessions are stored through `connect-redis` using the same Redis client as the default connection.
+
+## Injecting RedisService
+
+Inject `RedisService` anywhere you need direct Redis access:
+
+```typescript
+import { RedisService } from 'nestjs-redis-client';
+
+constructor(private readonly redisService: RedisService) {}
+
+async storeTemporaryCode(email: string, code: string) {
+  await this.redisService.set(`verification:${email}`, code, 600);
+}
+```
+
+`getClient()` returns the underlying `ioredis` client if you need lower-level commands.
+
+## Usage patterns in the starter
+
+- **Session store** — `connect-redis` reads and writes session keys via `sess:<sessionId>`.
+- **Verification codes** — `verification:<email>` keys with a 600-second TTL.
+- **Password reset tokens** — `password-reset:<token>` keys with a 600-second TTL.
+- **WebSocket auth** — The gateway reads `sess:<sessionId>` directly to authenticate socket connections.
+- **Rate limiting** — Throttler stores request counters per IP/route.
+- **Queues** — BullMQ uses Redis for job storage, delayed jobs, and worker coordination.
+
+## Scaling
+
+For a single Redis instance, logical databases are enough. If you move to Redis Cluster, logical databases are not supported and you should split concerns by separate clusters or key prefixes. The throttler and BullMQ configurations already accept explicit host/port values, so you can point them to different Redis endpoints when needed.

@@ -1,0 +1,69 @@
+---
+title: Configuration
+description: How environment variables are loaded, grouped, and injected.
+---
+
+Configuration is organized under `src/config/` using `@nestjs/config` and the `registerAs` helper. Each config file owns one domain and returns a plain object that can be injected by its registered key.
+
+## Config files
+
+| File | Domain | Key |
+| --- | --- | --- |
+| `app.config.ts` | App name, port, throttling | `app` |
+| `auth.config.ts` | Session secret, cookie, OAuth | `auth` |
+| `redis.config.ts` | Redis host, port, db | `redis` |
+| `mail.config.ts` | SMTP and Handlebars templates | `mail` |
+| `graphql.config.ts` | GraphQL schema and debug settings | `graphql` (GraphQL variant only) |
+
+## Example: Redis config
+
+```typescript title="src/config/redis.config.ts"
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('redis', () => ({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT!, 10) || 6379,
+  db: parseInt(process.env.REDIS_DB!, 10) || 0,
+  isGlobal: true,
+}));
+```
+
+The module is loaded with `RedisModule.registerAsync(redisConfig.asProvider())` in `InfrastructureModule`.
+
+## Injecting config
+
+You can inject a whole config object by its key:
+
+```typescript
+constructor(
+  @Inject(authConfig.KEY) private readonly auth: ConfigType<typeof authConfig>,
+) {}
+```
+
+Or use `ConfigService` for one-off values:
+
+```typescript
+constructor(private readonly configService: ConfigService) {}
+
+const authConfig = this.configService.get<AuthConfig>('auth');
+```
+
+## Loading order
+
+`AppModule` loads all config files into `ConfigModule.forRoot`. This makes them available globally, so you do not need to import `ConfigModule` in every feature module.
+
+```typescript title="src/app.module.ts"
+ConfigModule.forRoot({
+  isGlobal: true,
+  expandVariables: true,
+  load: [mailConfig, redisConfig, authConfig, appConfig],
+})
+```
+
+## Validation
+
+The current setup does not use a validation schema. You can add a Joi schema to `ConfigModule.forRoot` later if you want strict environment validation at boot time.
+
+## Environment variables
+
+The generated project includes a `.env.example` file with all supported variables. Copy it to `.env` and adjust values for your environment. See the [Environment variables](/docs/reference/environment-variables/) reference for a full list.

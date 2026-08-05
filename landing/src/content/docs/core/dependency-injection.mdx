@@ -1,0 +1,72 @@
+---
+title: Dependency injection
+description: How the repository pattern and injection tokens keep the core decoupled from infrastructure.
+---
+
+The project uses NestJS dependency injection to keep business logic separate from infrastructure. Instead of importing a concrete database client directly, core services depend on interfaces and injection tokens.
+
+## Repository pattern
+
+The user module is the main example. It defines a `UserRepositoryInterface` and an injection token, then provides a default in-memory implementation.
+
+```typescript title="src/core/user/repository/user.respository-interface.ts"
+export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
+
+export interface UserRepositoryInterface {
+  findByEmail(email: string): Promise<User | null>;
+  createUser(data: registerDto): Promise<User>;
+  findById(id: string): Promise<User | null>;
+  updateUser(user: User): Promise<User>;
+}
+```
+
+The module wires the token to the stub:
+
+```typescript title="src/core/user/user.module.ts"
+{
+  provide: USER_REPOSITORY,
+  useClass: NoopUserRepository,
+}
+```
+
+The service injects the interface by token:
+
+```typescript title="src/core/user/v1/user.service.ts"
+constructor(
+  @Inject(USER_REPOSITORY)
+  private readonly userRepository: UserRepositoryInterface,
+) {}
+```
+
+This lets you swap `NoopUserRepository` for a TypeORM, Prisma, or Mongoose implementation without changing `UserService` or any controller.
+
+## The same pattern elsewhere
+
+The upload module uses `UPLOAD_SERVICE` as an injection token. The queue processor injects it and calls the interface methods, but the default `NoopUploader` throws until you provide a real adapter. The queue processor is already wired to use it; only the implementation needs to change.
+
+## AsyncLocalStorage as a shared service
+
+Request context is provided through a global `AsyncLocalStorage` instance registered under the `ASYNC_STORAGE` token. The logger interceptor stores a `requestId` at the start of each request, and the Winston logger builder reads it later without passing it through every function call.
+
+You can inject the same store anywhere you need request-scoped context:
+
+```typescript
+constructor(
+  @Inject(ASYNC_STORAGE)
+  private readonly als: AsyncLocalStorage<LoggerStore>,
+) {}
+```
+
+## When to use tokens vs concrete classes
+
+Use an injection token when:
+
+- You expect multiple implementations (database, storage provider).
+- The implementation is infrastructure, not domain.
+- You want to test the service with a fake that implements the same interface.
+
+Use a concrete class when the behavior is stable and unlikely to change, such as the `AuthenticationService` or `LoggerServiceBuilder`.
+
+## Testing with fakes
+
+Because services depend on interfaces, unit tests can provide a fake repository instead of a real database. The existing tests use `TestBed.solitary` from Suites and fake doubles from `@suites/doubles.jest`. This keeps tests fast and focused on the service logic, not the database.

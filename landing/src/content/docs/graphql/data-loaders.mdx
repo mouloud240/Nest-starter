@@ -1,0 +1,72 @@
+---
+title: Data loaders
+description: Per-request DataLoaders and the N+1 problem.
+---
+
+GraphQL resolvers often load the same entity multiple times during a single request. A DataLoader batches those loads into one call and caches the result within the request.
+
+## How it works
+
+1. `AppModule` creates a new set of DataLoaders for every GraphQL request.
+2. The loaders are passed in the context.
+3. Resolvers call `load(id)` instead of querying the database directly.
+4. DataLoader collects all `load` calls in the same event loop tick and resolves them in a single batch.
+5. The result is cached for the rest of the request.
+
+## UserDataLoader
+
+The starter provides a `UserDataLoader` factory:
+
+```typescript title="src/common/modules/dataloader/user.dataloader.ts"
+@Injectable()
+export class UserDataLoader {
+  constructor(private readonly userService: UserService) {}
+
+  createLoader(): DataLoader<string, User | null> {
+    return new DataLoader<string, User | null>(
+      async (userIds: readonly string[]) => {
+        const users = await Promise.all(
+          userIds.map((id) => this.userService.findById(id)),
+        );
+        return users;
+      },
+      { cache: true, batch: true },
+    );
+  }
+}
+```
+
+The loader returns users in the same order as the requested IDs.
+
+## Using a loader in a resolver
+
+```typescript
+@Resolver(() => UserType)
+export class UserResolver {
+  constructor(private readonly userService: UserService) {}
+
+  @Query(() => UserType)
+  async currentUser(
+    @Context() ctx: { loaders: IDataLoaders },
+    @CurrentUser() user: User,
+  ) {
+    return ctx.loaders.userLoader.load(user.id);
+  }
+}
+```
+
+## Why per-request instances
+
+A DataLoader instance must not be shared across requests. Its cache is scoped to a single request; otherwise, stale data would leak between users. The GraphQL context creates a new loader for every request.
+
+## Adding a new loader
+
+1. Create a new loader class with a `createLoader` method.
+2. Add it to the `IDataLoaders` interface.
+3. Add the loader factory to `CommonModule` exports.
+4. Create the loader in the GraphQL context in `AppModule`.
+5. Inject `ctx.loaders.<loaderName>` in your resolver.
+
+## Current limitation
+
+The provided `UserDataLoader` resolves one `findById` call per ID. When you switch to a real database, replace the `Promise.all(...findById)` with a single `findByIds` query to get the full benefit of batching. The loader structure stays the same; only the data access changes.

@@ -1,0 +1,118 @@
+---
+title: WebSocket gateway
+description: How WebSocket connections are authenticated and how the gateway extension pattern works.
+---
+
+The project uses Socket.io with a session-based authentication model. Because WebSocket connections are persistent, the usual request-response guard pattern does not fit cleanly. The starter solves this by centralizing connection authentication in a single base gateway and extending it for domain-specific features.
+
+## The WebSocket authentication problem
+
+NestJS guards are designed for HTTP request-response cycles. With a persistent WebSocket connection, a short-lived JWT token would expire mid-connection and break the client. The common alternatives are:
+
+1. **Session-based authentication** — Use the same persistent session cookie that the REST API uses. The session lives across the whole connection, so guards work as expected.
+2. **Long-lived token** — Issue a long-lived token during the handshake and attach it to the client. This keeps the connection authenticated but requires careful token management.
+3. **Access token + refresh token** — Recreate the HTTP flow by emitting a refresh event when the token expires and waiting for a new token from the server. This adds client-side complexity and per-message parsing overhead.
+4. **Handshake-only verification** — Verify authentication only during the initial handshake and trust the connection afterwards. This is simple but requires strict connection management.
+
+This starter uses the session-based approach.
+
+## The gateway extension pattern
+
+When you have multiple gateways on the same namespace in NestJS, the connection initialization logic from one gateway applies to all gateways on that namespace. This is not obvious from the NestJS docs, but it lets you centralize auth logic in a base gateway and extend it for business features.
+
+### Base manager
+
+Create a base gateway that handles authentication in `handleConnection`:
+
+```typescript
+export class WSManager implements OnGatewayInit, OnGatewayConnection {
+  @Inject(AuthenticationService)
+  private readonly authService: AuthenticationService;
+
+  handleConnection(client: Socket, ...args: any[]) {
+    const token = client.handshake.auth.token;
+    const user = this.authService.validateToken(token);
+    if (!user) {
+      client.disconnect(true);
+      return;
+    }
+    client.user = user;
+  }
+}
+```
+
+Use property-based injection on the parent class so subclasses do not have to pass dependencies through their constructors.
+
+### Domain-specific gateways
+
+Extend the base manager for each feature. The child gateway inherits the authenticated connection logic.
+
+```typescript
+@WebSocketGateway({ namespace: '/notifications' })
+export class NotificationGateway extends WSManager {
+  constructor() {
+    super();
+  }
+
+  @SubscribeMessage('subscribe-to-notifications')
+  handleSubscription(client: Socket, data: any) {
+    // client.user is already set
+  }
+}
+```
+
+If a namespace needs extra connection logic, call `super.handleConnection()` and add your own:
+
+```typescript
+@WebSocketGateway({ namespace: '/chat' })
+export class ChatGateway extends WSManager {
+  constructor(private readonly chatService: ChatService) {
+    super();
+  }
+
+  handleConnection(client: any, ...args: any[]) {
+    super.handleConnection(client, ...args);
+    const user = client.user;
+    const room = extractRoomFromHandshake(client.handshake);
+    client.join(room);
+  }
+}
+```
+
+This keeps authentication logic in one place and lets business gateways focus on their domain.
+
+## How the starter implements it
+
+The generated project ships with a single `WsConnectionsManagerGateway` on the default namespace. It authenticates every socket connection by reading the session cookie from the handshake, looking up the Redis session key `sess:<sessionId>`, and attaching the user to the socket.
+
+```typescript title="src/core/websocket/ws-connections-manager.gateway.ts"
+async handleConnection(client: Socket) {
+  const sessionId = this.extractSessionIdFromSocket(client);
+  if (!sessionId) {
+    client.disconnect(true);
+    return;
+  }
+  const userId = await this.resolveUserIdFromSession(sessionId);
+  if (!userId) {
+    client.disconnect(true);
+    return;
+  }
+  const user = await this.userService.findById(userId);
+  if (!user) {
+    client.disconnect(true);
+    return;
+  }
+  client['user'] = user;
+  await client.join(`user_${user.id}`);
+}
+```
+
+It also joins the socket to a per-user room so you can emit events directly to a user from anywhere.
+
+## Redis adapter
+
+The starter includes `@socket.io/redis-adapter` in its dependencies but does not wire it by default. To scale across multiple Node.js processes, create the Redis adapter in the gateway's `afterInit` or in a dedicated module and attach it to the server.
+
+## Guards in WebSocket context
+
+Guards are still useful for WebSocket authorization (RBAC) on specific messages. You can guard a `@SubscribeMessage` handler with a custom guard that checks `client.user` or roles. The connection itself is already authenticated, so guards only need to decide if the user may perform the action.

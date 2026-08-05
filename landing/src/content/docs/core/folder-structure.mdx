@@ -1,0 +1,80 @@
+---
+title: Folder structure
+description: How the generated NestJS project is organized and why.
+---
+
+The generated project keeps related code close together and separates concerns by layer. This makes it easier to find what you are looking for and to replace implementations without touching callers.
+
+## Top-level layout
+
+```
+my-app/
+├── src/
+│   ├── app.module.ts
+│   ├── main.ts
+│   ├── app.controller.ts
+│   ├── config/
+│   ├── core/
+│   ├── common/
+│   ├── infrastructure/
+│   ├── monitoring/
+│   ├── security/
+│   └── types/
+├── test/
+├── compose.yaml
+├── Dockerfile.dev
+└── Dockerfile.production
+```
+
+## `src/config/`
+
+Configuration objects registered with `@nestjs/config` using `registerAs`. Each file owns one domain: app, auth, Redis, mail. They are loaded in `AppModule` and injected where needed.
+
+## `src/core/`
+
+Feature modules that represent your business domain:
+
+- `authentication/` — Passport strategies, session guards, auth service and controller.
+- `user/` — User entity, service, repository interface and the default in-memory stub.
+- `websocket/` — Socket.io gateway that authenticates connections via the shared session store.
+
+Each feature uses a `v1/` subfolder so you can add new API versions without deleting the old one.
+
+## `src/common/`
+
+Shared building blocks used across features:
+
+- `modules/email/` — Mailer module with Handlebars templates.
+- `modules/async_storage/` — `AsyncLocalStorage` provider for request context.
+- `interceptors/response-formatter.interceptor.ts` — Wraps responses in a consistent envelope.
+- `filter/httpException.filter.ts` — Formats uncaught `HttpException` responses.
+- `utils/` — Small helpers for hashing, JSON, queries, and sockets.
+
+## `src/infrastructure/`
+
+Technical adapters that your core services depend on through abstractions:
+
+- `db/` — Empty module placeholder for your ORM or database client.
+- `queue/` — BullMQ connection, mail processor, upload processor.
+- `upload/` — `IUploadService` interface plus a no-op stub.
+- `clusters/` — Optional Node.js cluster wrapper.
+
+## `src/monitoring/`
+
+Observability tooling:
+
+- `health/` — Terminus health checks.
+- `logger/` — Winston setup, request-scoped `AsyncLocalStorage`, and the logging interceptor.
+
+## `src/security/`
+
+Cross-cutting security concerns. Currently this contains the `RateLimitingModule`, which registers a global `ThrottlerGuard` backed by Redis.
+
+## Where to add new code
+
+- New business feature → `src/core/<feature>/v1/`
+- Shared utility or cross-cutting concern → `src/common/`
+- New external adapter (database, storage, queue) → `src/infrastructure/`
+- New environment-driven value → `src/config/`
+
+Keep adapter-specific code out of core services. The core should only know about interfaces and domain models.

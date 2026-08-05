@@ -1,0 +1,48 @@
+---
+title: Logging
+description: How Winston, request IDs, and AsyncLocalStorage are wired together.
+---
+
+Logging uses Winston with a request-scoped context. The `LoggerInterceptor` creates a `requestId` at the start of each HTTP request, stores it in `AsyncLocalStorage`, and the logger builder includes it in every log line emitted during that request.
+
+## How it works
+
+1. The interceptor starts a timer and reads the client IP.
+2. It generates a `requestId` (or accepts one from the `x-request-id` header).
+3. It runs the request inside an `AsyncLocalStorage` context.
+4. The logger builder reads the store and appends `requestId` to the log line.
+5. On response, the interceptor logs the duration and status code.
+
+This means a single request spans multiple log lines with the same ID, which is useful for tracing errors through guards, services, and repositories.
+
+## Using the logger
+
+Inject the builder and call `build()` to get a NestJS-compatible logger:
+
+```typescript
+const logger = app.get(LoggerServiceBuilder).build();
+app.useLogger(logger);
+```
+
+Inside any provider, use NestJS's standard `Logger` or inject the same builder. The `requestId` is picked up automatically if the call is within the request context.
+
+## Log format
+
+The console transport outputs JSON-formatted logs with timestamp, level, optional `requestId`, and message:
+
+```
+[2025-...] [info] [requestId: abc-123] : Request started from IP: ..., Path: /api/v1/authentication/login, Method: POST at ...
+[2025-...] [info] [requestId: abc-123] : Response completed in 23ms 🔥 with Status:200
+```
+
+## Adding context
+
+The `LoggerStore` interface currently only stores `requestId`. You can extend it with `userId`, `tenantId`, or other fields and update the interceptor to populate them. Anywhere you inject `ASYNC_STORAGE`, you can read the current store with `als.getStore()`.
+
+## LogContext decorator
+
+The `LogContext` decorator wraps a method and auto-logs entry, duration, success, and errors. It is useful for background jobs or service methods where you want a consistent log envelope without manual log calls. The decorator expects the class to have a `logger` property.
+
+## Adding transports
+
+The `LoggerServiceBuilder` is designed to accept more transports. Uncomment or add Winston transports for file, Loki, or a cloud provider. Because the builder is constructed once, the transport is shared across the application.

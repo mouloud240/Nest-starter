@@ -1,0 +1,19 @@
+---
+title: OAuth
+description: Google OAuth login flow.
+---
+
+OAuth login is implemented through Passport's Google strategy. The routes are registered in the REST authentication controller, but the actual provider-specific profile handling is left for you to complete.
+
+## Routes
+
+- `GET /api/v1/authentication/oauth/google` — Initiates the Google OAuth flow.
+- `GET /api/v1/authentication/oauth/google/callback` — Handles the callback and calls `AuthenticationService.login` to create a session.
+
+## What is implemented
+
+The guard, strategy, and routes are wired. The callback writes the returned user into a session, just like local login. To use it, configure the Google OAuth credentials in `.env` and implement the provider mapping in `AuthenticationService`.
+
+## Next steps
+
+The provider profile normalization and user lookup/create logic are intentionally stubbed because they depend on your user model and OAuth providers. Once you have defined how a Google profile maps to your user entity, OAuth login works the same way as local login from the client's perspective: a session cookie is returned and used for subsequent requests.

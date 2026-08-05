@@ -69,7 +69,18 @@ const metrics = [
 					Redis-backed sessions, and no-op persistence so it boots before
 					you&rsquo;ve written a line.
 				</p>
-				<pre class="install" aria-label="Install command"><code><span class="prompt">$</span> npx create-nestforge</code></pre>
+				<pre class="install" data-copy="npx create-nestforge@latest" aria-label="Install command">
+					<code><span class="prompt">$</span> npx create-nestforge@latest</code>
+					<button class="copy-btn" type="button" aria-label="Copy install command">
+						<svg class="copy-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+							<path fill="currentColor" d="M4 1.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-1Zm0 3a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-1Zm-2.5 3a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.5-.5h-10Z"/>
+						</svg>
+						<svg class="check-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" hidden>
+							<path fill="currentColor" d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+						</svg>
+						<span class="copy-label">Copy</span>
+					</button>
+				</pre>
 				<div class="cta">
 					<a class="btn btn-primary" href="/docs/quickstart/">Get started</a>
 					<a class="btn btn-secondary" href="/docs/introduction/">Read the docs</a>
@@ -87,5 +98,35 @@ const metrics = [
 				}
 			</section>
 		</main>
+
+		<script>
+			(function () {
+				const COPY_FEEDBACK_MS = 1500;
+				function copyText(element) {
+					const text = element.getAttribute('data-copy');
+					if (!text || !navigator.clipboard) return;
+					navigator.clipboard.writeText(text).then(() => {
+						const button = element.querySelector('.copy-btn');
+						if (!button) return;
+						const icon = button.querySelector('.copy-icon');
+						const check = button.querySelector('.check-icon');
+						const label = button.querySelector('.copy-label');
+						if (icon) icon.setAttribute('hidden', '');
+						if (check) check.removeAttribute('hidden');
+						if (label) label.textContent = 'Copied';
+						setTimeout(() => {
+							if (icon) icon.removeAttribute('hidden');
+							if (check) check.setAttribute('hidden', '');
+							if (label) label.textContent = 'Copy';
+						}, COPY_FEEDBACK_MS);
+					});
+				}
+				document.querySelectorAll('[data-copy]').forEach((el) => {
+					el.addEventListener('click', () => copyText(el));
+					const btn = el.querySelector('.copy-btn');
+					if (btn) btn.addEventListener('click', (e) => { e.stopPropagation(); copyText(el); });
+				});
+			})();
+		</script>
 	</body>
 </html>

@@ -1,0 +1,62 @@
+---
+title: Auth endpoints
+description: REST endpoints for authentication.
+---
+
+The REST authentication controller exposes the endpoints used for login, registration, verification, password reset, and OAuth.
+
+## Endpoints
+
+| Method | Path | Guard | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/authentication/login` | `LocalGuard` | Authenticates and creates a session. |
+| `POST` | `/api/v1/authentication/register` | — | Registers a user and queues a verification email. |
+| `POST` | `/api/v1/authentication/logout` | `SessionAuthGuard` | Destroys the current session. |
+| `POST` | `/api/v1/authentication/resend-verification` | — | Resends the verification email. |
+| `POST` | `/api/v1/authentication/verify-email` | — | Verifies the email with the OTP code. |
+| `POST` | `/api/v1/authentication/forgot-password` | — | Sends a password reset email. |
+| `POST` | `/api/v1/authentication/reset-password` | — | Resets the password with a token. |
+| `GET` | `/api/v1/authentication/oauth/google` | `GoogleGuard` | Starts Google OAuth flow. |
+| `GET` | `/api/v1/authentication/oauth/google/callback` | `GoogleGuard` | OAuth callback that creates a session. |
+
+## Response format
+
+All successful responses are wrapped by the global response formatter:
+
+```json
+{
+  "success": true,
+  "timeStamp": "2025-...",
+  "data": { ... }
+}
+```
+
+Login and OAuth callback return the authenticated user inside `data`. The other endpoints return a message object.
+
+## Errors
+
+Errors are handled by `HttpExceptionFilter` and return a consistent JSON envelope:
+
+```json
+{
+  "statusCode": 401,
+  "message": "Session not found",
+  "success": false,
+  "timestamp": "2025-..."
+}
+```
+
+## Calling from a client
+
+Make sure to include credentials on cross-origin requests so the session cookie is sent and stored:
+
+```javascript
+fetch('/api/v1/authentication/login', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json', 'X-Csrf-Token': csrfToken },
+  body: JSON.stringify({ email, password }),
+});
+```
+
+For CSRF-protected POST requests, the client must read the CSRF cookie and send the token back in the `X-Csrf-Token` header (or whatever header name you configure in `csrf-csrf`).

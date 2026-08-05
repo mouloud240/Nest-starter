@@ -1,0 +1,45 @@
+---
+title: Mailer
+description: How emails are sent via the mail queue and Handlebars templates.
+---
+
+The project uses `@nestjs-modules/mailer` with Handlebars templates. Emails are sent from the `EmailService`, which is called by the mail queue processor.
+
+## Configuration
+
+`mail.config.ts` registers the mailer asynchronously. It reads SMTP settings from the environment and points the template adapter at `src/common/modules/email/templates/`.
+
+```typescript title="src/config/mail.config.ts"
+MailerModule.forRootAsync(mailConfig.asProvider())
+```
+
+## Templates
+
+The starter includes two Handlebars templates:
+
+- `verification.hbs` — Renders the email verification OTP code.
+- `password-reset.hbs` — Renders the password reset token.
+
+Place new templates in the same folder and reference them by relative path when calling `sendMail`.
+
+## EmailService
+
+`EmailService` wraps `MailerService` and provides three methods:
+
+```typescript
+await this.emailService.sendEmail(to, subject, body);
+await this.emailService.sendVerificationEmail(to, code);
+await this.emailService.sendPasswordResetEmail(to, token);
+```
+
+It logs success and errors. If the mailer throws, the error is logged but the queue processor's retry logic is what ultimately decides whether the job is retried.
+
+## Adding a new template
+
+1. Create a new `.hbs` file under `src/common/modules/email/templates/`.
+2. Add a method in `EmailService` that calls `sendMail` with the template name and context.
+3. Add a new job name and processor handler if the email is sent via the queue.
+
+## Testing locally
+
+For local development, use a test SMTP service such as Mailpit, Mailtrap, or Ethereal. Set the SMTP credentials in `.env` and restart the app. The queue processor will pick up jobs and send them through the configured transport.

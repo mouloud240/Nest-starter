@@ -1,0 +1,76 @@
+---
+title: Security
+description: Rate limiting, CSRF, Helmet, CORS, and validation in the generated app.
+---
+
+The generated app includes a baseline security stack: rate limiting, CSRF protection, Helmet headers, CORS, global validation, and a global exception filter. These are wired in `main.ts` and the `SecurityModule`.
+
+## Rate limiting
+
+`RateLimitingModule` registers a global `ThrottlerGuard` using Redis storage. The limits are read from `app.config.ts` and apply to all routes unless explicitly skipped.
+
+```typescript title="src/security/rate-limiting/rate-limiting.module.ts"
+ThrottlerModule.forRootAsync({
+  useFactory: (configService, redisConf) => ({
+    storage: new ThrottlerStorageRedisService({
+      host: redisConf.host,
+      port: redisConf.port,
+      db: 2,
+    }),
+    throttlers: [
+      {
+        name: 'global',
+        limit: configService.throttler.limit,
+        ttl: configService.throttler.ttl,
+        blockDuration: configService.throttler.blockDuration,
+        ignoreUserAgents: configService.throttler.ignoreUserAgents,
+      },
+    ],
+  }),
+})
+```
+
+Use `@SkipThrottle()` to bypass it for specific routes or controllers.
+
+## CSRF protection
+
+`main.ts` applies `doubleCsrf` from `csrf-csrf`. It uses the session ID to generate a double-submit cookie token. The client must send the token back in a header or form field for mutating requests.
+
+The cookie name is `__Host-psifi.x-csrf-token`. The current configuration is set for development (`secure: false`). Change this to `secure: true` and `sameSite: 'strict'` or `'lax'` in production.
+
+## Helmet and CORS
+
+Helmet sets security headers including a content security policy. CORS is configured to allow the frontend URL from the `FRONTEND_URL` environment variable. Update both for production.
+
+## Global validation
+
+`ValidationPipe` is registered globally with:
+
+- `whitelist: true` — strips unknown properties.
+- `transform: true` — transforms payloads to DTO instances.
+- `forbidUnknownValues: true` — rejects unknown nested objects.
+
+## Exception filter
+
+`HttpExceptionFilter` catches `HttpException` and returns a consistent JSON error response:
+
+```json
+{
+  "statusCode": 401,
+  "message": "Unauthorized",
+  "success": false,
+  "timestamp": "2025-..."
+}
+```
+
+## Cookie parser
+
+CSRF protection reads `req.signedCookies`. The generated app requires `cookie-parser` to be installed and registered in `main.ts` with `app.use(cookieParser())`. Without it, POST routes will fail because `req.signedCookies` is undefined.
+
+## Security checklist before production
+
+- Change CSRF `getSecret` to a real secret from the environment.
+- Enable `secure: true` on CSRF and session cookies.
+- Restrict CORS origins to known domains.
+- Review Helmet CSP directives for your frontend assets.
+- Move rate-limiting thresholds to values that match your traffic.

@@ -1,0 +1,62 @@
+---
+title: Guards & decorators
+description: How to use the existing guards and decorators in REST controllers.
+---
+
+The starter ships with a small set of guards and decorators that work across REST and GraphQL controllers.
+
+## SessionAuthGuard
+
+Use `SessionAuthGuard` on any route that requires a logged-in user:
+
+```typescript
+@Controller('user')
+export class UserController {
+  @Get('me')
+  @UseGuards(SessionAuthGuard)
+  async getCurrentUser(@CurrentUser() user: User) {
+    return this.userService.findById(user.id);
+  }
+}
+```
+
+The guard reads `request.session.userId`, loads the user from the repository, and attaches it to `request.user`. If the session is missing or invalid, it throws `UnauthorizedException`.
+
+## LocalGuard
+
+Use `LocalGuard` only on the login endpoint. It delegates to Passport's local strategy, which reads `email` and `password` from `request.body` and calls `AuthenticationService.validateUser`.
+
+```typescript
+@UseGuards(LocalGuard)
+@Post('login')
+async login(@Req() request: SessionRequest, @CurrentUser() user: User) {
+  return this.authenticationService.login(request, user);
+}
+```
+
+## CurrentUser decorator
+
+`CurrentUser` reads `request.user` and returns either the full user or a single property:
+
+```typescript
+@CurrentUser() user: User          // full user
+@CurrentUser('email') email: string // only the email
+```
+
+If the user is not set, it throws an error. This should never happen when `SessionAuthGuard` is applied first.
+
+## Combining guards
+
+You can apply multiple guards in order:
+
+```typescript
+@UseGuards(SessionAuthGuard, RolesGuard)
+@Post('admin-only')
+async adminOnly(@CurrentUser() user: User) { ... }
+```
+
+The second guard can inspect `request.user` to decide authorization.
+
+## Creating custom guards
+
+Create a class that implements `CanActivate` and reads `request.user` or `request.session`. For route-specific checks, return `true` or `false`. For auth failures, throw `UnauthorizedException` or `ForbiddenException` so the global exception filter returns the correct status code.

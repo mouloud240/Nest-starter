@@ -1,0 +1,83 @@
+---
+title: Health checks
+description: Terminus health checks and how to add your own.
+---
+
+The `/health` endpoint is provided by `@nestjs/terminus` through `HealthModule`. It returns a single JSON object with the status of every registered indicator.
+
+## Default checks
+
+The generated `HealthController` registers four checks:
+
+- `github` — HTTP ping to `https://github.com` to verify outbound connectivity.
+- `disk health` — Disk usage at `/` with a 75% threshold.
+- `memory heap` — Heap usage with a 150 MB threshold.
+- `memory RSS` — RSS usage with a 150 MB threshold.
+
+```typescript title="src/monitoring/health/health.controller.ts"
+@Get()
+@HealthCheck()
+check() {
+  return this.health.check([
+    () => this.http.pingCheck('github', 'https://github.com'),
+    () => this.disk.checkStorage('disk health', { thresholdPercent: 0.75, path: '/' }),
+    () => this.memory.checkHeap('memory heap', 150 * 1024 * 1024),
+    () => this.memory.checkRSS('memory RSS', 150 * 1024 * 1024),
+  ]);
+}
+```
+
+## Adding a check
+
+Add a function that returns a `HealthIndicatorResult`. For example, to check Redis:
+
+```typescript
+import { RedisService } from 'nestjs-redis-client';
+
+@Controller('health')
+export class HealthController {
+  constructor(
+    private health: HealthCheckService,
+    private http: HttpHealthIndicator,
+    private disk: DiskHealthIndicator,
+    private memory: MemoryHealthIndicator,
+    private redis: RedisService,
+  ) {}
+
+  @Get()
+  @HealthCheck()
+  check() {
+    return this.health.check([
+      () => this.http.pingCheck('github', 'https://github.com'),
+      () => this.disk.checkStorage('disk health', { thresholdPercent: 0.75, path: '/' }),
+      () => this.memory.checkHeap('memory heap', 150 * 1024 * 1024),
+      () => this.memory.checkRSS('memory RSS', 150 * 1024 * 1024),
+      () => this.checkRedis(),
+    ]);
+  }
+
+  private async checkRedis() {
+    await this.redis.getClient().ping();
+    return { redis: { status: 'up' } };
+  }
+}
+```
+
+## Health response format
+
+A healthy response returns HTTP 200:
+
+```json
+{
+  "status": "ok",
+  "info": { "github": { "status": "up" }, ... },
+  "error": {},
+  "details": { "github": { "status": "up" }, ... }
+}
+```
+
+If any check fails, the endpoint returns HTTP 503 and the failing indicator is listed under `error` and `details`.
+
+## Load balancers and orchestrators
+
+Use the `/health` endpoint for Kubernetes liveness/readiness probes or load balancer health checks. Keep the checks lightweight: expensive checks will delay the response and can cause unnecessary restarts.

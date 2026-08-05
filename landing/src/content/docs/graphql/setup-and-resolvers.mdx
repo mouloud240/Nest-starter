@@ -1,0 +1,123 @@
+---
+title: Setup & resolvers
+description: GraphQL module setup, code-first schema, and resolver anatomy.
+---
+
+The GraphQL variant is a layer over the base template. The CLI copies the base template, then overwrites shared files with GraphQL-aware versions. The same `AuthenticationService` and `UserService` are used by both REST and GraphQL resolvers.
+
+## Module setup
+
+`AppModule` in the GraphQL variant adds `GraphQLModule` with the Apollo driver:
+
+```typescript title="src/app.module.ts (GraphQL variant)"
+GraphQLModule.forRootAsync<ApolloDriverConfig>({
+  driver: ApolloDriver,
+  imports: [CommonModule],
+  useFactory: (
+    graphqlConfiguration: ConfigType<typeof graphqlConfig>,
+    userDataLoader: UserDataLoader,
+  ) => ({
+    ...graphqlConfiguration,
+    context: ({ req, res }) => {
+      const loaders: IDataLoaders = {
+        userLoader: userDataLoader.createLoader(),
+      };
+      return { req, res, loaders };
+    },
+  }),
+  inject: [graphqlConfig.KEY, UserDataLoader],
+})
+```
+
+The `context` function is overridden to create a fresh set of DataLoaders per request.
+
+## Code-first schema
+
+`graphql.config.ts` uses the code-first approach:
+
+```typescript title="src/config/graphql.config.ts"
+autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+sortSchema: true,
+debug: process.env.NODE_ENV !== 'production',
+```
+
+TypeScript decorators on classes and fields define the schema. The schema file is generated automatically at startup and can be inspected for review.
+
+## Resolver anatomy
+
+A resolver is a NestJS provider decorated with `@Resolver`. It injects services and maps GraphQL operations to them.
+
+### Authentication resolver
+
+```typescript title="src/core/authentication/authentication.resolver.ts"
+@Resolver()
+export class AuthenticationResolver {
+  constructor(private readonly authenticationService: AuthenticationService) {}
+
+  @Mutation(() => AuthResponseType)
+  async login(
+    @Args('loginInput') loginInput: LoginInput,
+    @Context() ctx: { req: SessionRequest },
+  ): Promise<AuthResponseType> {
+    const user = await this.authenticationService.validateUser(
+      loginInput.email,
+      loginInput.password,
+    );
+    return this.authenticationService.login(ctx.req, user);
+  }
+}
+```
+
+Login bypasses Passport because GraphQL requests do not populate `req.body` the way REST does. The resolver validates the user directly and writes the session.
+
+### User resolver
+
+```typescript title="src/core/user/user.resolver.ts"
+@Resolver(() => UserType)
+export class UserResolver {
+  constructor(private readonly userService: UserService) {}
+
+  @UseGuards(SessionAuthGuard)
+  @Query(() => UserType)
+  async currentUser(@CurrentUser() user: User): Promise<UserType> {
+    return this.userService.findById(user.id);
+  }
+}
+```
+
+The same `SessionAuthGuard` and `CurrentUser` decorator work here because they detect GraphQL context.
+
+## Object types and inputs
+
+Object types define the schema output shape:
+
+```typescript title="src/core/authentication/graphql/types/user.type.ts"
+@ObjectType()
+export class UserType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  email: string;
+
+  @Field()
+  username: string;
+}
+```
+
+Input types define the arguments for mutations:
+
+```typescript title="src/core/authentication/graphql/inputs/login.input.ts"
+@InputType()
+export class LoginInput {
+  @Field()
+  email: string;
+
+  @Field()
+  password: string;
+}
+```
+
+## Running alongside REST
+
+The GraphQL variant still includes the REST authentication controller for OAuth callbacks. All other auth operations are exposed through the `/graphql` endpoint. Apollo Sandbox is available at `/graphql` in development.

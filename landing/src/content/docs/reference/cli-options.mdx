@@ -1,0 +1,64 @@
+---
+title: CLI options
+description: Flags and prompts for the nestforge CLI.
+---
+
+The `create-nestforge` CLI scaffolds a project from the command line. You can run it interactively or pass flags to automate the process.
+
+## Usage
+
+```bash
+npx create-nestforge@latest
+```
+
+## Interactive prompts
+
+When run without flags, the CLI asks for:
+
+1. **Project name** — lowercase letters, numbers, and dashes only.
+2. **Variant** — `Express + REST` or `GraphQL (Apollo)`.
+
+## Flags
+
+| Flag | Description | Example |
+| --- | --- | --- |
+| `--project-name` | Project name and target directory | `--project-name my-app` |
+| `--variant` | Template variant: `rest` or `graphql` | `--variant graphql` |
+| `--target-dir` | Override the output directory | `--target-dir ./output/my-app` |
+
+## Automation example
+
+```bash
+npx create-nestforge@latest --project-name my-app --variant graphql
+```
+
+This creates `my-app` in the current working directory, copies the base template, and layers the GraphQL overlay on top.
+
+## What the CLI does
+
+1. Copies `templates/base` into the target directory.
+2. If the variant is `graphql`, copies the GraphQL overlay, overwriting the shared files.
+3. Merges the GraphQL `dependencies` into `package.json`.
+4. Sets the `package.json` `name` to the project name.
+5. Creates a `.env` file from `.env.example`.
+
+## After scaffolding
+
+The CLI prints the next steps:
+
+```bash
+cd my-app
+pnpm install
+cp .env.example .env
+pnpm start:dev
+```
+
+Make sure Redis is running before starting the app. The easiest way is to use Docker Compose:
+
+```bash
+docker compose up redis
+```
+
+## Skipping ignored files
+
+The CLI ignores `node_modules`, `dist`, `.git`, `coverage`, `.env`, and `pnpm-lock.yaml` when copying templates. Install dependencies fresh in the generated project.

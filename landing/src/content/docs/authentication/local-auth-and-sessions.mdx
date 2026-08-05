@@ -1,0 +1,60 @@
+---
+title: Local auth & sessions
+description: Email and password login, server-side sessions, verification, and password reset.
+---
+
+Authentication uses email and password with server-side sessions stored in Redis. The flow is the same in both REST and GraphQL variants; only the transport layer differs.
+
+## Login flow
+
+1. The client sends `email` and `password` to the login endpoint.
+2. `LocalStrategy` validates the credentials via `AuthenticationService.validateUser`.
+3. The service checks that the user exists, the email is verified, and the password matches the Argon2id hash.
+4. The user's ID is written to the session.
+5. Subsequent requests include the session cookie, and `SessionAuthGuard` loads the user from `userId`.
+
+## Registration flow
+
+1. The client sends username, email, password, and confirm password.
+2. `registerDto` validates that the password is strong and matches the confirmation.
+3. `UserService.createUser` stores the user through the configured repository.
+4. A 6-digit OTP is generated, stored in Redis under `verification:<email>` with a 600-second TTL, and a mail job is queued.
+5. The client must call the verify endpoint with the code before logging in.
+
+## Password reset flow
+
+1. The client calls `forgot-password` with an email.
+2. A UUID token is generated and stored in Redis under `password-reset:<token>` with a 600-second TTL.
+3. A password-reset email is queued.
+4. The client calls `reset-password` with the token and a new password.
+5. The token is validated, the new password is hashed, and the user is updated.
+
+## Session management
+
+`createSessionMiddleware` in `src/core/authentication/session/session.middleware.ts` creates the Express session middleware with `connect-redis`. The session cookie is shared between REST, GraphQL, and WebSocket connections.
+
+```typescript
+createSessionMiddleware(configService, redisService)
+```
+
+Logout calls `request.session.destroy()`, which removes the session from Redis and clears the cookie.
+
+## Guards
+
+- `LocalGuard` — Runs the Passport local strategy on login. Populates `request.user`.
+- `SessionAuthGuard` — Reads `request.session.userId`, loads the user, and attaches it to `request.user`. Use it on any route that requires authentication.
+- `CurrentUser` decorator — Returns the authenticated user from `request.user`.
+
+## GraphQL differences
+
+In the GraphQL variant, the login mutation bypasses `LocalGuard` because GraphQL requests do not populate `req.body` for Passport. The resolver calls `AuthenticationService.validateUser` directly and then `login`.
+
+The `SessionAuthGuard` and `CurrentUser` decorator detect GraphQL context with `GqlExecutionContext` so the same guards work for both REST and GraphQL endpoints.
+
+## Hashing
+
+Passwords are hashed with Argon2id using `argon2`. Compare hashes with the `compareHash` utility and never store plain text passwords.
+
+## Email verification requirement
+
+`validateUser` rejects unverified users. This means the login endpoint returns 401 until the email is verified. If you want a different flow, change the check in `AuthenticationService.validateUser`.
