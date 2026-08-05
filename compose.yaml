@@ -12,14 +12,31 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.${NODE_ENV:-dev}
-    ports:
-      - 3000:3000
+    # ports:
+    #   - 3000:3000
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.server.rule=Host(`localhost`)'
+      - 'traefik.http.services.server.loadbalancer.server.port=3000'
     depends_on:
       db:
         condition: service_healthy
     volumes:
       #   - ./dist:/usr/src/app/dist
       - .:/usr/src/app
+
+  traefik:
+    image: traefik:latest
+    command:
+      - '--api.insecure=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--entrypoints.web.address=:80'
+    ports:
+      - '80:80'
+      - '8080:8080'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
   redis:
     image: redis:latest
