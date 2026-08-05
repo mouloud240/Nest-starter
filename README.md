@@ -1,6 +1,19 @@
 # create-nest-starter
 
-A T3-style CLI that scaffolds a production-ready NestJS project.
+A command-line tool that scaffolds a production-ready NestJS project. Answer a
+couple of prompts and you get a working application you can build on top of.
+
+## Capabilities
+
+- **Interactive scaffolding** — prompts for project name and target directory,
+  then generates the project.
+- **Non-interactive mode** — `--project-name` and `--target-dir` flags for
+  automation and CI.
+- **Express + REST** — a NestJS API with Redis-backed sessions.
+- **Boots without a database** — persistence is a no-op stub by default, so you
+  can start building immediately.
+- **Production baseline** — global rate limiting, Swagger docs, Helmet, CSRF,
+  and structured logging included.
 
 ## Quickstart
 

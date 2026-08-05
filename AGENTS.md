@@ -4,7 +4,7 @@ This file is a compact source of repo-specific truth for AI agents. If a fact is
 
 ## Repo shape
 
-This is a T3-style pnpm monorepo, not a single app:
+This is a pnpm monorepo, not a single app:
 
 - `cli/` — the `create-nest-starter` scaffolder (interactive prompts + generator).
 - `templates/base/` — the base NestJS app that the CLI scaffolds.

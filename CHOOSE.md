@@ -1,6 +1,6 @@
 # Choosing a Starter Variant
 
-The repo is a T3-style monorepo that ships a CLI (`create-nest-starter`). The
+The repo is a monorepo that ships a CLI (`create-nest-starter`). The
 CLI currently scaffolds a single variant (Express + REST + Redis sessions). More
 variants are planned as template overlays.
 
