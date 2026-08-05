@@ -33,7 +33,7 @@ function parseArgs(argv: string[]) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
-  intro(pc.bgCyan(pc.black(' create-nest-starter ')));
+  intro(pc.bgCyan(pc.black(' nestforge ')));
 
   let projectName = args['project-name'];
   if (!projectName) {

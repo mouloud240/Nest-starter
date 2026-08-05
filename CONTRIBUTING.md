@@ -21,7 +21,7 @@ This project aims to:
 2. Clone your fork:
 
    ```bash
-   git clone https://github.com/mouloud240/nestjs-starter.git
+   git clone https://github.com/mouloud240/NestForge.git
    cd nestjs-starter
    ```
 3. Install dependencies:
@@ -86,7 +86,7 @@ If you're adding new functionality, please update the relevant parts of the READ
 
 ## 🐛 Reporting Bugs
 
-1. Create a [GitHub Issue](https://github.com/your-org/nestjs-starter/issues)
+1. Create a [GitHub Issue](https://github.com/mouloud240/NestForge/issues)
 2. Include the following:
 
    * Expected behavior

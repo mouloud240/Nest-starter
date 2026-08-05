@@ -1,0 +1,84 @@
+---
+title: Quickstart
+description: Scaffold and run your first nestforge project in under a minute.
+---
+
+Get a project on screen in under a minute.
+
+## 1. Create a project
+
+Run the scaffolder:
+
+```bash
+npx create-nestforge@latest
+```
+
+Answer the prompts for a project name and target directory, or skip them for
+automation:
+
+```bash
+npx create-nestforge@latest --project-name my-app --target-dir ./projects
+```
+
+The CLI copies the base template, sets the package name, and creates a `.env`
+from the example.
+
+## 2. Install dependencies
+
+```bash
+cd my-app
+pnpm install
+```
+
+## 3. Configure the environment
+
+```bash
+cp .env.example .env
+```
+
+## 4. Run with Docker (recommended)
+
+The `compose.yaml` brings up the whole stack — the app, Redis, Postgres, and a
+Traefik reverse proxy — with nothing else installed locally:
+
+```bash
+docker compose up --build
+```
+
+By default the app builds from `Dockerfile.dev` and runs in watch mode
+(`start:dev`). It is served through Traefik at `http://localhost`.
+
+For a production image, set `NODE_ENV=production` to build from
+`Dockerfile.production`:
+
+```bash
+NODE_ENV=production docker compose up --build -d
+```
+
+Only need infrastructure, not the app? Start individual services:
+
+```bash
+docker compose up redis
+```
+
+## 5. Run manually
+
+This route requires Redis running locally:
+
+```bash
+docker run -p 6379:6379 redis:latest
+```
+
+Then start the app:
+
+```bash
+pnpm start:dev
+```
+
+The app runs at `http://localhost:3000`, with Swagger docs at
+`http://localhost:3000/api-docs`.
+
+## Next steps
+
+Read the [Introduction](/docs/introduction/) for what is inside, or head to the
+GitHub repository for the full API surface.

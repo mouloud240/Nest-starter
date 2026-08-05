@@ -1,12 +1,11 @@
 {
-  "name": "create-nest-starter",
+  "name": "create-nestforge",
   "version": "0.0.1",
-  "private": true,
   "description": "Interactive CLI to scaffold a NestJS starter project.",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "create-nest-starter": "./dist/index.js"
+    "create-nestforge": "./dist/index.js"
   },
   "files": [
     "dist",
@@ -17,7 +16,8 @@
     "build": "pnpm copy-templates && tsup src/index.ts --format esm --clean --dts",
     "dev": "pnpm copy-templates && tsup src/index.ts --format esm --watch",
     "start": "node dist/index.js",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@clack/prompts": "^0.10.0",
