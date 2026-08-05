@@ -6,16 +6,16 @@ brand
 
 ## Users
 
-Backend engineers who evaluate or adopt `create-nest-starter`. They arrive from
+Backend engineers who evaluate or adopt `nestforge`. They arrive from
 search, GitHub, or the CLI's post-scaffold hint. They want a production-grade
 NestJS baseline without assembling boilerplate by hand, and they judge the
 project in seconds.
 
 ## Product Purpose
 
-Landing page and docs for `create-nest-starter`: a command-line tool that
+Landing page and docs for `nestforge`: a command-line tool that
 scaffolds a production-ready NestJS backend. Success is a visitor understanding
-what it generates and running `npx create-nest-starter` within 60 seconds.
+what it generates and running `npx create-nestforge` within 60 seconds.
 
 ## Brand Personality
 

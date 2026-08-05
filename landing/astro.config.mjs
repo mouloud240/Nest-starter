@@ -6,19 +6,19 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: 'create-nest-starter',
+			title: 'nestforge',
 			description: 'Scaffold a production-ready NestJS backend from the command line.',
 			favicon: '/favicon.svg',
 			logo: {
 				src: '/src/assets/logo.svg',
-				alt: 'create-nest-starter',
+				alt: 'nestforge',
 			},
 			editLink: { disabled: true },
 			social: [
 				{
 					icon: 'github',
 					label: 'GitHub',
-					href: 'https://github.com/mouloud240/nestjs-starter',
+					href: 'https://github.com/mouloud240/NestForge',
 				},
 			],
 			customCss: ['./src/styles/theme.css'],

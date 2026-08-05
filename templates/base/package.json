@@ -1,7 +1,7 @@
 {
   "name": "nestjs-starter-base",
   "version": "0.0.1",
-  "description": "Base NestJS starter template used by create-nest-starter.",
+  "description": "Base NestJS starter template used by create-nestforge.",
   "author": "",
   "private": true,
   "license": "MIT",

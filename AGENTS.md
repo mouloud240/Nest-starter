@@ -6,7 +6,7 @@ This file is a compact source of repo-specific truth for AI agents. If a fact is
 
 This is a pnpm monorepo, not a single app:
 
-- `cli/` — the `create-nest-starter` scaffolder (interactive prompts + generator).
+- `cli/` — the `create-nestforge` scaffolder (interactive prompts + generator).
 - `templates/base/` — the base NestJS app that the CLI scaffolds.
 - `landing/` — Astro docs site.
 
@@ -44,7 +44,7 @@ pnpm run lint
 
 ## Important: `cli/templates/base` is generated
 
-Before `pnpm build:cli` runs, `cli/copy-templates.mjs` copies `templates/base` into `cli/templates/base` (ignoring `node_modules`, `dist`, `.git`, `coverage`, `.env`, `pnpm-lock.yaml`). `cli/templates/base` is gitignored. If you edit `templates/base`, run `pnpm --filter create-nest-starter build` (or `copy-templates`) so the CLI picks up the change — and always re-verify a generated project after template edits.
+Before `pnpm build:cli` runs, `cli/copy-templates.mjs` copies `templates/base` into `cli/templates/base` (ignoring `node_modules`, `dist`, `.git`, `coverage`, `.env`, `pnpm-lock.yaml`). `cli/templates/base` is gitignored. If you edit `templates/base`, run `pnpm --filter create-nestforge build` (or `copy-templates`) so the CLI picks up the change — and always re-verify a generated project after template edits.
 
 ## Testing
 

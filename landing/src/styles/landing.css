@@ -189,6 +189,27 @@ a {
 	animation: rise 700ms 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.install {
+	display: inline-flex;
+	margin: 2rem auto 0;
+	padding: 0.7rem 1.1rem;
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 0.9rem;
+	background: rgba(0, 0, 0, 0.35);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 10px;
+	animation: rise 700ms 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.install code {
+	font: inherit;
+}
+
+.install .prompt {
+	color: #ff5c74;
+	margin-right: 0.6rem;
+}
+
 .btn {
 	display: inline-flex;
 	align-items: center;
@@ -282,6 +303,7 @@ a {
 	.kicker,
 	.title,
 	.lede,
+	.install,
 	.cta,
 	.metrics {
 		animation: none;

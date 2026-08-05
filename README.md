@@ -1,4 +1,4 @@
-# create-nest-starter
+# nestforge
 
 A command-line tool that scaffolds a production-ready NestJS project. Answer a
 couple of prompts and you get a working application you can build on top of.
@@ -37,7 +37,7 @@ The generated project ships with:
 ## Quickstart
 
 ```bash
-npx create-nest-starter
+npx create-nestforge
 ```
 
 You will be asked for a project name and target directory, then the CLI copies
@@ -81,7 +81,7 @@ The app runs on `http://localhost:3000`.
 
 ```
 .
-├── cli/            # create-nest-starter (interactive scaffolder)
+├── cli/            # create-nestforge (interactive scaffolder)
 ├── templates/
 │   └── base/       # Express + REST + Redis-session NestJS app (no-op defaults)
 └── landing/        # Astro docs site
