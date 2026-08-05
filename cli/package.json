@@ -1,6 +1,6 @@
 {
   "name": "create-nestforge",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "Interactive CLI to scaffold a NestJS starter project.",
   "license": "MIT",
   "type": "module",

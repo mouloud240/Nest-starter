@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
   intro,
   outro,
@@ -89,7 +90,12 @@ async function main() {
   );
 }
 
-if (pathToFileURL(process.argv[1]).href === import.meta.url) {
+// Resolve symlinks so the guard matches when invoked through npm's `.bin` shim.
+const isEntryPoint =
+  process.argv[1] !== undefined &&
+  realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isEntryPoint) {
   main().catch((err) => {
     console.error(pc.red(err instanceof Error ? err.message : String(err)));
     process.exit(1);

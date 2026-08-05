@@ -1,5 +1,14 @@
 # nestforge
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/create-nestforge"><img src="https://img.shields.io/npm/v/create-nestforge?style=flat-square&logo=npm&color=780f20" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/create-nestforge"><img src="https://img.shields.io/npm/dm/create-nestforge?style=flat-square&label=downloads&color=780f20" alt="npm downloads"></a>
+  <a href="https://github.com/mouloud240/NestForge"><img src="https://img.shields.io/github/stars/mouloud240/NestForge?style=flat-square&logo=github&color=780f20" alt="GitHub stars"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/npm/l/create-nestforge?style=flat-square&label=license&color=780f20" alt="License"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D%2022-780f20?style=flat-square&logo=node.js&logoColor=white" alt="Node.js &gt;= 22"></a>
+  <a href="https://github.com/mouloud240/NestForge"><img src="https://img.shields.io/badge/PRs-welcome-780f20?style=flat-square" alt="PRs welcome"></a>
+</p>
+
 A command-line tool that scaffolds a production-ready NestJS project. Answer a
 couple of prompts and you get a working application you can build on top of.
 
