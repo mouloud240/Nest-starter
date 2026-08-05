@@ -7,12 +7,15 @@ This file is a compact source of repo-specific truth for AI agents. If a fact is
 This is a pnpm monorepo, not a single app:
 
 - `cli/` — the `create-nestforge` scaffolder (interactive prompts + generator).
-- `templates/base/` — the base NestJS app that the CLI scaffolds.
+- `templates/base/` — the base NestJS app (Express + REST) that the CLI scaffolds.
+- `templates/graphql/` — a template **overlay** (delta files + a `package.json` deps snippet) layered over `base` by the generator to produce the GraphQL variant. Only override files that change; the rest is inherited from `base`.
 - `landing/` — Astro docs site.
 
-The historical branches (`fastify`, `graphql`) hold reference implementations that future template overlays will be derived from. When adding features, keep the app source under `templates/base/src/` and the generator/packaging under `cli/`.
+The `fastify` branch holds the reference implementation for a future overlay; `graphql` was folded into the `templates/graphql/` overlay. When adding features, keep the app source under `templates/base/src/` and the generator/packaging under `cli/`.
 
 Do not add adapter-specific or transport-specific code to `core` services; keep it in `main.ts`, guards, decorators, and resolvers. Core services are shared across variants.
+
+The GraphQL overlay must stay aligned with `base`'s service APIs: resolvers depend on `AuthenticationService` (`login`, `registerUser`, `logout`, `resendVerificationCode`, `verifyEmail`, `forgotPassword`, `resetPassword`, `validateUser`) and `UserService.findById/updateUser`. The GraphQL variant needs `@as-integrations/express5` (Apollo v5 Express integration) — its latest stable is `1.1.2`, not the 2.x alphas. The overlay's `local.guard.ts`, `session.guard.ts`, and `current-user.decorator.ts` are GraphQL-aware versions that also serve HTTP.
 
 ## Package manager
 
@@ -44,7 +47,7 @@ pnpm run lint
 
 ## Important: `cli/templates/base` is generated
 
-Before `pnpm build:cli` runs, `cli/copy-templates.mjs` copies `templates/base` into `cli/templates/base` (ignoring `node_modules`, `dist`, `.git`, `coverage`, `.env`, `pnpm-lock.yaml`). `cli/templates/base` is gitignored. If you edit `templates/base`, run `pnpm --filter create-nestforge build` (or `copy-templates`) so the CLI picks up the change — and always re-verify a generated project after template edits.
+Before `pnpm build:cli` runs, `cli/copy-templates.mjs` copies `templates/base` and `templates/graphql` into `cli/templates/` (ignoring `node_modules`, `dist`, `.git`, `coverage`, `.env`, `pnpm-lock.yaml`). `cli/templates/` is gitignored. If you edit either template, run `pnpm --filter create-nestforge build` (or `copy-templates`) so the CLI picks up the change — and always re-verify a generated project after template edits. The generator copies `base` first, then layers the `graphql` overlay over it (overwriting the shared files and merging `dependencies`).
 
 ## Testing
 
@@ -58,6 +61,7 @@ Before `pnpm build:cli` runs, `cli/copy-templates.mjs` copies `templates/base` i
 - `USER_REPOSITORY` (`templates/base/src/core/user/repository/`) is a `NoopUserRepository` in-memory stub. Swap in a real repository before persisting users.
 - `GoogleStrategy.logOauthUser` throws `NotImplementedException`. OAuth routes exist but do not work.
 - `ThrottlerGuard` is registered as `APP_GUARD` in `RateLimitingModule`.
+- Generated apps fail on POST routes: `main.ts`'s CSRF middleware reads `req.signedCookies`, which is `undefined` without `cookie-parser` (both variants). Add `cookie-parser` + `app.use(cookieParser(...))` in `main.ts` to fix.
 - `cli/` has no automated tests yet; add `vitest` coverage when the generator grows beyond a straight copy.
 
 ## Environment and infra

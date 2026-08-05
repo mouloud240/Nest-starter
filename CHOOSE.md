@@ -1,13 +1,15 @@
 # Choosing a Starter Variant
 
-The repo is a monorepo that ships a CLI (`create-nestforge`). The
-CLI currently scaffolds a single variant (Express + REST + Redis sessions). More
-variants are planned as template overlays.
+The repo is a monorepo that ships a CLI (`create-nestforge`). The CLI asks
+which variant to scaffold, or you can pass `--variant` for automation.
 
-## Current template
+## Variants
 
-- `base` — **Express** + REST + Redis-backed sessions, with no-op defaults so it
-  boots without a database.
+- `rest` (default) — **Express** + REST + Redis-backed sessions, with no-op
+  defaults so it boots without a database.
+- `graphql` — **Express** + GraphQL (Apollo, code-first) + Redis-backed
+  sessions. Adds a `/graphql` endpoint alongside the REST API, with resolvers
+  for authentication and user operations plus a per-request DataLoader setup.
 
 ## How to get the starter
 
@@ -21,14 +23,18 @@ Or run the CLI from this repo:
 pnpm --filter create-nestforge start
 ```
 
+Both variants are template overlays in `templates/`:
+
+- `templates/base/` — the full Express + REST app.
+- `templates/graphql/` — a delta applied over `base` that adds the GraphQL
+  layer (config, resolvers, guards, DataLoaders, dependencies).
+
 ## Planned variants
 
 - `fastify` — Fastify + REST + Redis-backed sessions
-- `graphql` — Express + GraphQL + Redis-backed sessions
 
-These will be added as overlays in `templates/` in a later milestone. Until then,
-the historical branches (`fastify`, `graphql`) contain the reference
-implementations they will be derived from.
+The historical `fastify` branch contains the reference implementation it will
+be derived from. The `graphql` branch was folded into the `graphql` overlay.
 
 ## Manual alternative
 
@@ -39,5 +45,5 @@ git clone -b fastify https://github.com/mouloud240/NestForge.git
 git clone -b graphql https://github.com/mouloud240/NestForge.git
 ```
 
-These are the source variants the templates are derived from; they are not the
+These are the source variants the templates were derived from; they are not the
 primary distribution mechanism.

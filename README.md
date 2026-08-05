@@ -10,17 +10,21 @@
 </p>
 
 A command-line tool that scaffolds a production-ready NestJS project. Answer a
-couple of prompts and you get a working application you can build on top of.
+couple of prompts and you get a working application you can build on top of —
+picking between an Express + REST API and an Express + GraphQL (Apollo) API.
 
 ## Capabilities
 
 The generated project ships with:
 
-- **Interactive scaffolding** — prompts for project name and target directory,
-  then generates the project.
-- **Non-interactive mode** — `--project-name` and `--target-dir` flags for
-  automation and CI.
+- **Interactive scaffolding** — prompts for project name and variant, then
+  creates the project in the directory where you ran the command.
+- **Non-interactive mode** — `--project-name`, `--target-dir`, and `--variant`
+  flags for automation and CI.
 - **Express + REST** — a NestJS API with URI versioning (`/api/v1`).
+- **Express + GraphQL** — an Apollo (code-first) `/graphql` endpoint layered
+  over the REST API, with auth and user resolvers plus per-request
+  DataLoaders.
 - **Auth-ready** — Passport local and Google OAuth strategies, Redis-backed
   sessions, guards, DTO validation, email-verification codes, and password
   reset.
@@ -49,8 +53,10 @@ The generated project ships with:
 npx create-nestforge
 ```
 
-You will be asked for a project name and target directory, then the CLI copies
-the base template, sets the package name, and creates a `.env` from the example.
+You will be asked for a project name and which variant to scaffold, then the CLI
+copies the template (layering the GraphQL overlay when selected), sets the
+package name, and creates a `.env` from the example. The project is created in
+the current directory, named after the project.
 
 ## Running the generated project
 
@@ -92,7 +98,8 @@ The app runs on `http://localhost:3000`.
 .
 ├── cli/            # create-nestforge (interactive scaffolder)
 ├── templates/
-│   └── base/       # Express + REST + Redis-session NestJS app (no-op defaults)
+│   ├── base/       # Express + REST + Redis-session NestJS app (no-op defaults)
+│   └── graphql/    # GraphQL overlay applied over base
 └── landing/        # Astro docs site
 ```
 
@@ -130,6 +137,10 @@ pnpm lint
 - OAuth routes exist but are not fully wired. Configure the providers in `.env`
   and implement the strategy callback before use.
 - Rate limiting is enabled globally via `ThrottlerGuard`.
+- The GraphQL variant mounts `/graphql` (Apollo Sandbox in development) and
+  keeps the full REST API.
+- POST routes require a CSRF token; the cookie infrastructure is not wired up,
+  so cookie-based POSTs fail until `cookie-parser` is added.
 
 ## License
 

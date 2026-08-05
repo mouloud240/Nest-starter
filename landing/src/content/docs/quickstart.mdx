@@ -13,15 +13,16 @@ Run the scaffolder:
 npx create-nestforge@latest
 ```
 
-Answer the prompts for a project name and target directory, or skip them for
-automation:
+Answer the prompts for a project name and variant — Express + REST or
+Express + GraphQL — or skip them for automation:
 
 ```bash
-npx create-nestforge@latest --project-name my-app --target-dir ./projects
+npx create-nestforge@latest --project-name my-app --variant graphql
 ```
 
-The CLI copies the base template, sets the package name, and creates a `.env`
-from the example.
+The project is created in the current directory, named after the project. The
+CLI copies the template, sets the package name, and creates a `.env` from the
+example.
 
 ## 2. Install dependencies
 
@@ -76,7 +77,8 @@ pnpm start:dev
 ```
 
 The app runs at `http://localhost:3000`, with Swagger docs at
-`http://localhost:3000/api-docs`.
+`http://localhost:3000/api-docs`. In the GraphQL variant, Apollo Sandbox is at
+`http://localhost:3000/graphql`.
 
 ## Next steps
 

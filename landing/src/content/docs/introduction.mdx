@@ -12,6 +12,9 @@ get a working application you can build on.
 The generated project ships with:
 
 - **Express + REST** — a NestJS API with URI versioning (`/api/v1`).
+- **Express + GraphQL** — pick it at scaffold time to layer an Apollo
+  (code-first) `/graphql` endpoint over the REST API, with auth and user
+  resolvers plus per-request DataLoaders.
 - **Auth-ready** — Passport local and Google OAuth strategies, Redis-backed
   sessions, guards, DTO validation, email-verification codes, and password
   reset.

@@ -11,8 +11,8 @@
 
 Scaffold a production-ready NestJS backend from the command line. Answer a
 couple of prompts and you get a working application you can build on top of —
-Express + REST, Redis-backed sessions, and no-op persistence so it boots before
-you've written a line.
+Express + REST or Express + GraphQL (Apollo), Redis-backed sessions, and no-op
+persistence so it boots before you've written a line.
 
 ## Usage
 
@@ -20,16 +20,26 @@ you've written a line.
 npx create-nestforge@latest
 ```
 
-You will be asked for a project name and target directory. The CLI copies the
-base template, sets the package name, and creates a `.env` from the example.
+You will be asked for a project name and which variant to scaffold. The project
+is created in the current directory, named after the project. The CLI copies
+the template (layering the GraphQL overlay when selected), sets the package
+name, and creates a `.env` from the example.
 
 ### Non-interactive
 
 Pass the same options as flags for automation and CI:
 
 ```bash
-npx create-nestforge@latest --project-name my-app --target-dir ./projects
+npx create-nestforge@latest --project-name my-app --variant graphql
 ```
+
+Available flags:
+
+| Flag             | Description                                                          |
+| ---------------- | -------------------------------------------------------------------- |
+| `--project-name` | Project name (defaults to an interactive prompt)                     |
+| `--variant`      | `rest` or `graphql` (defaults to an interactive prompt, then `rest`) |
+| `--target-dir`   | Override where the project is created (defaults to `./<project-name>`) |
 
 ## Running the generated project
 
@@ -49,7 +59,8 @@ docker compose up --build
 
 ## What you get
 
-- Express + REST with URI versioning (`/api/v1`)
+- Express + REST with URI versioning (`/api/v1`), or Express + GraphQL with an
+  Apollo code-first `/graphql` endpoint
 - Auth-ready: Passport local + Google OAuth, Redis-backed sessions
 - WebSocket gateway with gated, session-authenticated connections
 - BullMQ background jobs, mailer with Handlebars templates
