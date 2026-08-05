@@ -1,6 +1,7 @@
-import { UploadingOptions } from 'src/infrastructure/cloudinary/types/upload-options.interface';
+import { UploadFile } from 'src/infrastructure/upload/types/upload-file.type';
+import { UploadOptions } from 'src/infrastructure/upload/types/upload-options.type';
 
 export class UploadJobDto {
-  file: Express.Multer.File;
-  options: UploadingOptions;
+  file: UploadFile;
+  options: UploadOptions;
 }

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DbModule } from './db/db.module';
-import { CloudinaryModuleWrapper } from './cloudinary/cloudinary.module';
+import { UploadModule } from './upload/upload.module';
 import { QueueModule } from './queue/queue.module';
 import { RedisModule } from 'nestjs-redis-client';
 import redisConfig from 'src/config/redis.config';
@@ -8,10 +8,10 @@ import redisConfig from 'src/config/redis.config';
 @Module({
   imports: [
     DbModule,
-    CloudinaryModuleWrapper,
+    UploadModule,
     QueueModule,
     RedisModule.registerAsync(redisConfig.asProvider()),
   ],
-  exports: [RedisModule, QueueModule, CloudinaryModuleWrapper, DbModule],
+  exports: [RedisModule, QueueModule, UploadModule, DbModule],
 })
 export class InfrastructureModule {}

@@ -1,4 +1,4 @@
-export interface UploadingOptions {
+export interface UploadOptions {
   uploadType:
     | 'USER'
     | 'ORGANIZATION'
@@ -6,4 +6,5 @@ export interface UploadingOptions {
     | 'PROVIDER'
     | 'SUBMISSION'
     | 'OTHER';
+  metadata?: Record<string, unknown>;
 }

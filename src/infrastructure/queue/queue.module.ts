@@ -5,7 +5,7 @@ import { QUEUE_NAME } from 'src/common/constants/queues';
 import redisConfig from 'src/config/redis.config';
 import { MailProcessor } from './mail/mail.processor';
 import { UploadProcessor } from './upload/upload.processor';
-import { CloudinaryModuleWrapper } from '../cloudinary/cloudinary.module';
+import { UploadModule } from '../upload/upload.module';
 import { EmailModule } from 'src/common/modules/email/email.module';
 
 @Module({
@@ -32,7 +32,7 @@ import { EmailModule } from 'src/common/modules/email/email.module';
         name: queueName,
       })),
     ),
-    CloudinaryModuleWrapper,
+    UploadModule,
     EmailModule,
   ],
   providers: [MailProcessor, UploadProcessor],
