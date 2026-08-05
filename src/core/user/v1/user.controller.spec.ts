@@ -1,17 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { TestBed, type Mocked } from '@suites/unit';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 
 describe('UserController', () => {
   let controller: UserController;
+  let userService: Mocked<UserService>;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [UserController],
-      providers: [UserService],
-    }).compile();
-
-    controller = module.get<UserController>(UserController);
+  beforeAll(async () => {
+    const { unit, unitRef } = await TestBed.solitary(UserController).compile();
+    controller = unit;
+    userService = unitRef.get(UserService);
   });
 
   it('should be defined', () => {
