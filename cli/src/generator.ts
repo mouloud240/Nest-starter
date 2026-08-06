@@ -21,18 +21,22 @@ export interface CreateProjectOptions {
   projectName: string;
   targetDir: string;
   variant?: Variant;
+  templatesDir?: string;
 }
 
 export async function createProject(options: CreateProjectOptions) {
-  const { projectName, targetDir, variant = 'rest' } = options;
+  const { projectName, targetDir, variant = 'rest', templatesDir } = options;
   const dest = path.resolve(targetDir);
+  const resolvedTemplatesDir = templatesDir
+    ? path.resolve(templatesDir)
+    : TEMPLATES_DIR;
 
   if (existsSync(dest)) {
     throw new Error(`Directory ${dest} already exists.`);
   }
 
   await mkdir(dest, { recursive: true });
-  await cp(path.join(TEMPLATES_DIR, 'base'), dest, {
+  await cp(path.join(resolvedTemplatesDir, 'base'), dest, {
     recursive: true,
     filter: (src) => !IGNORED.has(path.basename(src)),
   });
@@ -41,7 +45,7 @@ export async function createProject(options: CreateProjectOptions) {
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
 
   if (variant === 'graphql') {
-    const overlay = path.join(TEMPLATES_DIR, 'graphql');
+    const overlay = path.join(resolvedTemplatesDir, 'graphql');
     await cp(overlay, dest, {
       recursive: true,
       filter: (src) =>

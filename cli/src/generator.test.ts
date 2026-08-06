@@ -1,0 +1,71 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import {
+  mkdtempSync,
+  rmSync,
+  existsSync,
+  readFileSync,
+  mkdirSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createProject } from './generator.js';
+
+const REPO_TEMPLATES = new URL('../../templates', import.meta.url).pathname;
+
+describe('createProject', () => {
+  let tempRoot: string;
+  let targetDir: string;
+
+  beforeEach(() => {
+    tempRoot = mkdtempSync(join(tmpdir(), 'nestforge-test-'));
+    targetDir = join(tempRoot, 'project');
+  });
+
+  afterEach(() => {
+    rmSync(tempRoot, { recursive: true, force: true });
+  });
+
+  it('scaffolds a rest project from templates', async () => {
+    await createProject({
+      projectName: 'rest-app',
+      targetDir,
+      variant: 'rest',
+      templatesDir: REPO_TEMPLATES,
+    });
+
+    expect(existsSync(join(targetDir, 'package.json'))).toBe(true);
+    expect(existsSync(join(targetDir, '.env'))).toBe(true);
+    expect(existsSync(join(targetDir, 'src', 'main.ts'))).toBe(true);
+    const pkg = JSON.parse(readFileSync(join(targetDir, 'package.json'), 'utf8'));
+    expect(pkg.name).toBe('rest-app');
+  });
+
+  it('scaffolds a graphql project with merged dependencies', async () => {
+    await createProject({
+      projectName: 'gql-app',
+      targetDir,
+      variant: 'graphql',
+      templatesDir: REPO_TEMPLATES,
+    });
+
+    expect(existsSync(join(targetDir, 'package.json'))).toBe(true);
+    expect(
+      existsSync(join(targetDir, 'src', 'core', 'authentication', 'authentication.resolver.ts')),
+    ).toBe(true);
+    const pkg = JSON.parse(readFileSync(join(targetDir, 'package.json'), 'utf8'));
+    expect(pkg.name).toBe('gql-app');
+    expect(pkg.dependencies).toHaveProperty('@nestjs/graphql');
+  });
+
+  it('throws when target directory already exists', async () => {
+    mkdirSync(targetDir, { recursive: true });
+    await expect(
+      createProject({
+        projectName: 'dupe',
+        targetDir,
+        variant: 'rest',
+        templatesDir: REPO_TEMPLATES,
+      }),
+    ).rejects.toThrow(/already exists/);
+  });
+});
