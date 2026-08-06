@@ -34,6 +34,7 @@
   "engines": {
     "node": ">=22"
   },
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
     "copy-templates": "node copy-templates.mjs",
     "build": "pnpm copy-templates && tsup src/index.ts --format esm --clean --dts",
