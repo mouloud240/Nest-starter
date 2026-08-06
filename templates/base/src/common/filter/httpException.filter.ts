@@ -15,13 +15,29 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     const status = exception.getStatus();
-    const message = exception.message || 'Internal server error';
+    const exceptionResponse = exception.getResponse();
 
-    this.logger.warn(`HTTP Exception: Status ${status} - Message: ${message}`);
-    this.logger.error(exception.cause);
+    let body: Record<string, unknown>;
+    if (typeof exceptionResponse === 'string') {
+      body = {
+        statusCode: status,
+        message: exceptionResponse,
+        error: exception.name.replace('Exception', ''),
+      };
+    } else if (exceptionResponse && typeof exceptionResponse === 'object') {
+      body = { ...(exceptionResponse as Record<string, unknown>) };
+      if (typeof body.statusCode !== 'number') {
+        body.statusCode = status;
+      }
+    } else {
+      body = { statusCode: status, message: exception.message };
+    }
+
+    this.logger.warn(
+      `HTTP Exception: Status ${status} - Message: ${body.message}`,
+    );
     response.status(status).json({
-      statusCode: status,
-      message: message,
+      ...body,
       success: false,
       timestamp: new Date().toISOString(),
     });
