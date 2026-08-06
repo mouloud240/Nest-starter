@@ -103,6 +103,14 @@ async function bootstrap() {
   process.on('uncaughtException', (err) => {
     logger.error('Uncaught Exception:', err);
   });
+
+  // Api versioning and global prefix
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+  app.setGlobalPrefix('api', { exclude: ['/api-docs', '/api-docs-json'] });
+
   //SWAGGER DOCS BUILDER
   const config = new DocumentBuilder()
     .setTitle('Core Api Documentation')
@@ -119,12 +127,6 @@ async function bootstrap() {
       content: document,
     }),
   );
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: '1',
-  });
-  app.setGlobalPrefix('api', { exclude: ['/api-docs', '/api-docs-json'] });
-
   //RUNNING THE APPLICATION
   const port = process.env.PORT || 3000;
   await app.listen(port);
