@@ -1,4 +1,4 @@
-# create-nestforge
+# NestForge Starter
 
 <p align="center">
   <a href="https://www.npmjs.com/package/create-nestforge"><img src="https://img.shields.io/npm/v/create-nestforge?style=flat-square&logo=npm&color=780f20" alt="npm version"></a>
@@ -9,10 +9,10 @@
   <a href="https://github.com/mouloud240/NestForge"><img src="https://img.shields.io/badge/PRs-welcome-780f20?style=flat-square" alt="PRs welcome"></a>
 </p>
 
-Scaffold a production-ready NestJS backend from the command line. Answer a
-couple of prompts and you get a working application you can build on top of —
-Express + REST or Express + GraphQL (Apollo), Redis-backed sessions, and no-op
-persistence so it boots before you've written a line.
+`create-nestforge` scaffolds a production-ready NestJS backend from the command
+line. Answer a couple of prompts and you get a working application you can build
+on top of — Express + REST or Express + GraphQL (Apollo), Redis-backed sessions,
+and no-op persistence so it boots before you've written a line.
 
 ## Usage
 

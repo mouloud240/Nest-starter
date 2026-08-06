@@ -22,22 +22,23 @@ This project aims to:
 
    ```bash
    git clone https://github.com/mouloud240/NestForge.git
-   cd nestjs-starter
+   cd NestForge
    ```
 3. Install dependencies:
 
    ```bash
-   npm install
+   pnpm install
    ```
-4. Create a `.env` file:
+4. Create a `.env` file in the template you are working on:
 
    ```bash
+   cd templates/base
    cp .env.example .env
    ```
 5. Run the development server:
 
    ```bash
-   pnpm run start:dev
+   pnpm dev:base
    ```
 
 ---

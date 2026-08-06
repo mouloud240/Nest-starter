@@ -1,4 +1,4 @@
-# nestforge
+# NestForge Starter
 
 <p align="center">
   <a href="https://www.npmjs.com/package/create-nestforge"><img src="https://img.shields.io/npm/v/create-nestforge?style=flat-square&logo=npm&color=780f20" alt="npm version"></a>
@@ -9,9 +9,10 @@
   <a href="https://github.com/mouloud240/NestForge"><img src="https://img.shields.io/badge/PRs-welcome-780f20?style=flat-square" alt="PRs welcome"></a>
 </p>
 
-A command-line tool that scaffolds a production-ready NestJS project. Answer a
-couple of prompts and you get a working application you can build on top of —
-picking between an Express + REST API and an Express + GraphQL (Apollo) API.
+`create-nestforge` is a command-line tool that scaffolds a production-ready
+NestJS project. Answer a couple of prompts and you get a working application you
+can build on top of — picking between an Express + REST API and an Express +
+GraphQL (Apollo) API.
 
 ## Capabilities
 
