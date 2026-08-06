@@ -67,7 +67,8 @@ export class AuthenticationService {
   }
 
   async registerUser(data: registerDto) {
-    const user = await this.userService.createUser(data);
+    const password = await generateHash(data.password);
+    const user = await this.userService.createUser({ ...data, password });
     await this.sendVerificationCode(user);
     return {
       message:
