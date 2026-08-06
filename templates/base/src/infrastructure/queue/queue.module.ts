@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bullmq';
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Global, Module } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { QUEUE_NAME } from 'src/common/constants/queues';
 import redisConfig from 'src/config/redis.config';
@@ -7,6 +7,7 @@ import { UploadModule } from '../upload/upload.module';
 import { EmailModule } from 'src/common/modules/email/email.module';
 import { loadProcessors } from './processor.loader';
 
+@Global()
 @Module({})
 export class QueueModule {
   static register(): DynamicModule {
