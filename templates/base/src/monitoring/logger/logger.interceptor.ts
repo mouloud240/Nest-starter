@@ -28,7 +28,10 @@ export class LoggerInterceptor implements NestInterceptor {
     //If not present, generate a new one
     //and set it in AsyncLocalStorage store and headers
     const clientRequestId = request.headers['x-request-id'];
-    const requestId = crypto.randomUUID();
+    const requestId =
+      typeof clientRequestId === 'string' && clientRequestId
+        ? clientRequestId
+        : crypto.randomUUID();
 
     const requestPath = request.path;
     const requestMethod = request.method;

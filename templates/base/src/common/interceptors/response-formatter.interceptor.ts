@@ -17,7 +17,6 @@ export class ResponseFormatterInterceptor implements NestInterceptor {
         return {
           success: true,
           timeStamp: new Date().toISOString(),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           data,
         };
       }),

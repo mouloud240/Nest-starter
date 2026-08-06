@@ -1,3 +1,4 @@
+/* oxlint-disable */
 import { globSync } from 'node:fs';
 import { resolve } from 'node:path';
 

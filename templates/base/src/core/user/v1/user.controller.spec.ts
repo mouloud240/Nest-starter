@@ -15,5 +15,6 @@ describe('UserController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+    expect(userService).toBeDefined();
   });
 });

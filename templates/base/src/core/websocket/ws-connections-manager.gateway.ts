@@ -1,4 +1,4 @@
-import { Inject, Logger, UseGuards } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,

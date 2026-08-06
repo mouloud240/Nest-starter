@@ -13,11 +13,11 @@ export function Match(property: string, validationOptions?: ValidationOptions) {
       options: validationOptions,
       constraints: [property],
       validator: {
-        validate(value: any, args: ValidationArguments) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        validate(value: unknown, args: ValidationArguments) {
           const [relatedPropertyName] = args.constraints;
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-          const relatedValue = (args.object as any)[relatedPropertyName];
+          const relatedValue = (args.object as Record<string, unknown>)[
+            relatedPropertyName as string
+          ];
           return value === relatedValue;
         },
       },
