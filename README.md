@@ -91,7 +91,8 @@ cp .env.example .env
 pnpm start:dev
 ```
 
-The app runs on `http://localhost:3000`.
+The app runs on `http://localhost:3000`. Interactive API docs are at
+`/api-docs` (Scalar on top of the OpenAPI document).
 
 ## Monorepo layout
 

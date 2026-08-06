@@ -50,8 +50,8 @@ cp .env.example .env
 pnpm start:dev
 ```
 
-The app runs at `http://localhost:3000`, with Swagger docs at
-`http://localhost:3000/api-docs`. Docker users can skip local setup entirely:
+The app runs at `http://localhost:3000`, with interactive docs at
+`http://localhost:3000/api-docs` (Scalar on top of the Swagger/OpenAPI document). Docker users can skip local setup entirely:
 
 ```bash
 docker compose up --build
