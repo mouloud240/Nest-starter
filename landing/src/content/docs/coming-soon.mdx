@@ -31,3 +31,18 @@ When this lands, it will be opt-in and will not replace the current session impl
 ## AI-friendly development
 
 The starter already relies on strict typing, opinionated patterns, and clear documentation. These qualities work well with AI agents, but the plan is to do more. Future releases will ship an `AGENTS.md` file alongside the generated project, a set of skills, and extra documentation that help agents produce less slop and generate code that matches the starter's conventions and quality standards.
+
+## Internationalization (i18n)
+
+The plan is to add a lightweight i18n layer for API messages and validation errors:
+
+- **Constant code names** — the backend returns translation keys (e.g. `errors.auth.invalidCredentials`) instead of raw strings.
+- **Argument placeholders** — responses can pass structured arguments alongside the code so the frontend can interpolate values.
+- **Frontend-driven rendering** — the frontend receives `{ code, args }`, injects the arguments into the translated string, and displays the localized message.
+- **Catalog endpoint** — the backend will expose an endpoint that serves the full translation catalog so the frontend can load only the languages it needs.
+
+This keeps the backend language-agnostic and lets the frontend own localization, which works well for teams building separate web, mobile, or desktop clients.
+
+## Want to contribute?
+
+If any of these features interest you, feel free to open a PR. The roadmap is driven by what the community needs, and contributions are welcome.
