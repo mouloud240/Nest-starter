@@ -9,6 +9,16 @@ export function generateHash(input: string): Promise<string> {
   return argon2.hash(input, ARGON2_CONFIG);
 }
 
-export function compareHash(input: string, hash: string): Promise<boolean> {
-  return argon2.verify(hash, input);
+export async function compareHash(
+  input: string,
+  hash: string,
+): Promise<boolean> {
+  // argon2.verify throws when the stored hash is not a valid argon2id hash
+  // (e.g. a plaintext password or a legacy hash). Treat any failure as a
+  // mismatch instead of surfacing a 500.
+  try {
+    return await argon2.verify(hash, input);
+  } catch {
+    return false;
+  }
 }
