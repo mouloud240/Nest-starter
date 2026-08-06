@@ -1,8 +1,9 @@
-# NestForge Starter
 
+# NestForge Starter
 <p align="center">
-  <img src="landing/src/assets/logo.svg" width="400" alt="NestForge logo" />
+  <img src="landing/src/assets/logo.svg" width="150" alt="NestForge logo" />
 </p>
+
 
 <p align="center">
   <a href="https://www.npmjs.com/package/create-nestforge"><img src="https://img.shields.io/npm/v/create-nestforge?style=flat-square&logo=npm&color=780f20" alt="npm version"></a>
