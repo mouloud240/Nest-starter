@@ -1,5 +1,6 @@
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,10 +23,19 @@ export interface CreateProjectOptions {
   targetDir: string;
   variant?: Variant;
   templatesDir?: string;
+  initGit?: boolean;
+  gitInitBranch?: string;
 }
 
 export async function createProject(options: CreateProjectOptions) {
-  const { projectName, targetDir, variant = 'rest', templatesDir } = options;
+  const {
+    projectName,
+    targetDir,
+    variant = 'rest',
+    templatesDir,
+    initGit = false,
+    gitInitBranch = 'main',
+  } = options;
   const dest = path.resolve(targetDir);
   const resolvedTemplatesDir = templatesDir
     ? path.resolve(templatesDir)
@@ -63,4 +73,11 @@ export async function createProject(options: CreateProjectOptions) {
 
   const envExample = await readFile(path.join(dest, '.env.example'), 'utf8');
   await writeFile(path.join(dest, '.env'), envExample);
+
+  if (initGit) {
+    execSync(`git init -b ${gitInitBranch}`, {
+      cwd: dest,
+      stdio: 'ignore',
+    });
+  }
 }

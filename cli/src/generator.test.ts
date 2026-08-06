@@ -5,6 +5,7 @@ import {
   existsSync,
   readFileSync,
   mkdirSync,
+  readdirSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -67,5 +68,28 @@ describe('createProject', () => {
         templatesDir: REPO_TEMPLATES,
       }),
     ).rejects.toThrow(/already exists/);
+  });
+
+  it('initializes a git repository when initGit is set', async () => {
+    await createProject({
+      projectName: 'git-app',
+      targetDir,
+      variant: 'rest',
+      templatesDir: REPO_TEMPLATES,
+      initGit: true,
+    });
+
+    expect(readdirSync(join(targetDir, '.git'))).toContain('HEAD');
+  });
+
+  it('skips git initialization by default', async () => {
+    await createProject({
+      projectName: 'no-git-app',
+      targetDir,
+      variant: 'rest',
+      templatesDir: REPO_TEMPLATES,
+    });
+
+    expect(existsSync(join(targetDir, '.git'))).toBe(false);
   });
 });

@@ -7,6 +7,7 @@ import {
   outro,
   text,
   select,
+  confirm,
   spinner,
   isCancel,
   note,
@@ -60,7 +61,7 @@ async function main() {
   let projectName = args['project-name'];
   if (!projectName) {
     const result = await text({
-      message: `${pc.bold('Step 1 of 2')} — What is your project name?`,
+      message: `${pc.bold('Step 1 of 3')} — What is your project name?`,
       placeholder: 'my-nest-app',
       defaultValue: 'my-nest-app',
       validate: (value) => {
@@ -81,7 +82,7 @@ async function main() {
     args['variant'] === 'graphql' ? 'graphql' : 'rest';
   if (!args['variant'] && !args['target-dir']) {
     const result = await select({
-      message: `${pc.bold('Step 2 of 2')} — Which variant?`,
+      message: `${pc.bold('Step 2 of 3')} — Which variant?`,
       options: [
         { value: 'rest', label: 'Express + REST (default)' },
         { value: 'graphql', label: 'GraphQL (Apollo)' },
@@ -99,18 +100,39 @@ async function main() {
   // project. `--target-dir` overrides this for automation.
   const targetDir = args['target-dir'] ?? path.join(process.cwd(), projectName);
 
+  let initGit = args['git'] ? true : args['no-git'] ? false : true;
+  if (
+    args['git'] === undefined &&
+    args['no-git'] === undefined &&
+    args['target-dir'] === undefined
+  ) {
+    const result = await confirm({
+      message: `${pc.bold('Step 3 of 3')} — Initialize a git repository?`,
+      initialValue: true,
+    });
+    if (isCancel(result)) {
+      outro(pc.red('Cancelled'));
+      process.exit(0);
+    }
+    initGit = result as boolean;
+  }
+
   const s = spinner();
   s.start(`Creating ${pc.bold(projectName)} (${variant})...`);
-  await createProject({ projectName, targetDir, variant });
+  await createProject({ projectName, targetDir, variant, initGit });
   s.stop(`${pc.green(pc.bold('✔'))} Created ${pc.bold(projectName)} at ${pc.cyan(targetDir)}`);
 
   note(
     [
       formatCommand('Move into the project:', `cd ${projectName}`),
+      initGit &&
+        formatCommand('Create your first commit:', 'git add . && git commit -m "init"'),
       formatCommand('Install dependencies:', 'pnpm install'),
       formatCommand('Copy environment defaults:', 'cp .env.example .env'),
       formatCommand('Start the dev server:', 'pnpm start:dev'),
-    ].join('\n\n'),
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
     'Next steps',
   );
 
