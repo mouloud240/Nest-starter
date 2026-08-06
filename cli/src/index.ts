@@ -7,12 +7,22 @@ import {
   outro,
   text,
   select,
+  spinner,
   isCancel,
+  note,
 } from '@clack/prompts';
 import pc from 'picocolors';
 import { createProject, Variant } from './generator.js';
 
 export { createProject } from './generator.js';
+
+const LOGO = `
+  _   _           _    __                     
+ | \\ | | ___  ___| |_ / _|_ __ ___ _ __ ___  
+ |  \\| |/ _ \\/ __| __| |_| '__/ _ \\ '_ \` _ \\ 
+ | |\\  |  __/\\__ \\ |_|  _| | |  __/ | | | | |
+ |_| \\_|\\___||___/\\__|_| |_|  \\___|_| |_| |_|
+`;
 
 function parseArgs(argv: string[]) {
   const args: Record<string, string> = {};
@@ -32,15 +42,25 @@ function parseArgs(argv: string[]) {
   return args;
 }
 
+function banner() {
+  return `${pc.bold(pc.magenta(LOGO))}\n${pc.dim(
+    'Scaffold a production-ready NestJS backend in seconds.',
+  )}`;
+}
+
+function formatCommand(label: string, command: string) {
+  return `  ${pc.dim(label)}\n  ${pc.cyan(pc.bold(command))}`;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
-  intro(pc.bgCyan(pc.black(' nestforge ')));
+  intro(banner());
 
   let projectName = args['project-name'];
   if (!projectName) {
     const result = await text({
-      message: 'What is your project name?',
+      message: `${pc.bold('Step 1 of 2')} — What is your project name?`,
       placeholder: 'my-nest-app',
       defaultValue: 'my-nest-app',
       validate: (value) => {
@@ -61,7 +81,7 @@ async function main() {
     args['variant'] === 'graphql' ? 'graphql' : 'rest';
   if (!args['variant'] && !args['target-dir']) {
     const result = await select({
-      message: 'Which variant?',
+      message: `${pc.bold('Step 2 of 2')} — Which variant?`,
       options: [
         { value: 'rest', label: 'Express + REST (default)' },
         { value: 'graphql', label: 'GraphQL (Apollo)' },
@@ -79,11 +99,24 @@ async function main() {
   // project. `--target-dir` overrides this for automation.
   const targetDir = args['target-dir'] ?? path.join(process.cwd(), projectName);
 
+  const s = spinner();
+  s.start(`Creating ${pc.bold(projectName)} (${variant})...`);
   await createProject({ projectName, targetDir, variant });
+  s.stop(`${pc.green(pc.bold('✔'))} Created ${pc.bold(projectName)} at ${pc.cyan(targetDir)}`);
+
+  note(
+    [
+      formatCommand('Move into the project:', `cd ${projectName}`),
+      formatCommand('Install dependencies:', 'pnpm install'),
+      formatCommand('Copy environment defaults:', 'cp .env.example .env'),
+      formatCommand('Start the dev server:', 'pnpm start:dev'),
+    ].join('\n\n'),
+    'Next steps',
+  );
 
   outro(
     pc.green(
-      `Project created at ${pc.cyan(targetDir)}.\nRun:\n  cd ${projectName}\n  pnpm install\n  cp .env.example .env\n  pnpm start:dev`,
+      `Ready to build. ${pc.dim('Run the commands above to get started.')}`,
     ),
   );
 }
@@ -95,7 +128,10 @@ const isEntryPoint =
 
 if (isEntryPoint) {
   main().catch((err) => {
-    console.error(pc.red(err instanceof Error ? err.message : String(err)));
+    console.error(
+      pc.red('\nError: ') + (err instanceof Error ? err.message : String(err)),
+    );
+    console.error(pc.dim('\nFor help, run: npx create-nestforge@latest --help'));
     process.exit(1);
   });
 }
