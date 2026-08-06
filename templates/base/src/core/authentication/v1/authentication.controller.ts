@@ -11,7 +11,7 @@ import {
 import { Response } from 'express';
 import { AuthenticationService } from './authentication.service';
 import { registerDto } from './dtos/requests/register.dto';
-import { ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthResponseDto } from './dtos/responses/auth-response.dto';
 import { LocalGuard } from '../guards/local.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
@@ -20,6 +20,7 @@ import { SessionAuthGuard } from '../guards/session.guard';
 import { GoogleGuard } from '../guards/oauth/google.guard';
 import { SessionRequest } from '../types/session-request.type';
 import { CsrfService } from '../../../common/modules/csrf/csrf.service';
+import { LoginDto } from './dtos/requests/login.dto';
 
 @Controller('authentication')
 export class AuthenticationController {
@@ -63,6 +64,10 @@ export class AuthenticationController {
     status: 400,
     description:
       'Bad Request. The request body is invalid or missing required fields.',
+  })
+  @ApiBody({
+    description: 'Login credentials',
+    type: () => LoginDto,
   })
   async login(@Req() request: SessionRequest, @CurrentUser() user: User) {
     return this.authenticationService.login(request, user);
