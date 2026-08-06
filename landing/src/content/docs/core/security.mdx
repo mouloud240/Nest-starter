@@ -65,7 +65,7 @@ Helmet sets security headers including a content security policy. CORS is config
 
 ## Cookie parser
 
-CSRF protection reads `req.signedCookies`. The generated app requires `cookie-parser` to be installed and registered in `main.ts` with `app.use(cookieParser())`. Without it, POST routes will fail because `req.signedCookies` is undefined.
+`cookie-parser` is installed and registered in `main.ts` before the session middleware so CSRF protection can read `req.signedCookies`.
 
 ## Security checklist before production
 

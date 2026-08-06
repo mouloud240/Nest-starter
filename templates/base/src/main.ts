@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import helmet from 'helmet';
 import { doubleCsrf, DoubleCsrfConfigOptions } from 'csrf-csrf';
+import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from 'nestjs-redis-client';
 import { AppModule } from './app.module';
@@ -40,12 +41,14 @@ async function bootstrap() {
     }),
   );
 
+  app.use(cookieParser());
+
   app.use(
     createSessionMiddleware(app.get(ConfigService), app.get(RedisService)),
   );
 
   const opts: DoubleCsrfConfigOptions = {
-    getSecret: () => 'Secret', //TODO:generate a secret
+    getSecret: () => process.env.CSRF_SECRET || 'defaultCsrfSecret',
     getSessionIdentifier: (req: SessionRequest) => req.sessionID,
     cookieName: '__Host-psifi.x-csrf-token',
     cookieOptions: {

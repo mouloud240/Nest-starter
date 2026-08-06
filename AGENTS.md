@@ -61,7 +61,7 @@ Before `pnpm build:cli` runs, `cli/copy-templates.mjs` copies `templates/base` a
 - `USER_REPOSITORY` (`templates/base/src/core/user/repository/`) is a `NoopUserRepository` in-memory stub. Swap in a real repository before persisting users.
 - `GoogleStrategy.logOauthUser` throws `NotImplementedException`. OAuth routes exist but do not work.
 - `ThrottlerGuard` is registered as `APP_GUARD` in `RateLimitingModule`.
-- Generated apps fail on POST routes: `main.ts`'s CSRF middleware reads `req.signedCookies`, which is `undefined` without `cookie-parser` (both variants). Add `cookie-parser` + `app.use(cookieParser(...))` in `main.ts` to fix.
+- `GoogleStrategy.logOauthUser` throws `NotImplementedException`. OAuth routes exist but do not work.
 - `cli/` has no automated tests yet; add `vitest` coverage when the generator grows beyond a straight copy.
 
 ## Environment and infra

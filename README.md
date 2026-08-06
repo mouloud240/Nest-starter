@@ -142,8 +142,7 @@ pnpm lint
   and import `QueueModule` where it is needed instead.
 - The GraphQL variant mounts `/graphql` (Apollo Sandbox in development) and
   keeps the full REST API.
-- POST routes require a CSRF token; the cookie infrastructure is not wired up,
-  so cookie-based POSTs fail until `cookie-parser` is added.
+- CSRF protection is enabled globally; cookie-parser is installed and registered in `main.ts`.
 
 ## License
 
