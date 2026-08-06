@@ -23,7 +23,7 @@ const metrics = [
 			content="Scaffold a production-ready NestJS backend from the command line. Express, Redis-backed sessions, and no-op persistence so it boots before you write a line."
 		/>
 		<meta name="generator" content={Astro.generator} />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href="/logo.svg" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -37,7 +37,7 @@ const metrics = [
 
 			<nav class="nav" aria-label="Main">
 				<a class="brand" href="/">
-					<span class="mark" aria-hidden="true">›_</span>
+					<img class="nav-logo" src="/logo.svg" alt="" aria-hidden="true" />
 					<span>nestforge</span>
 				</a>
 				<div class="links">
@@ -62,7 +62,9 @@ const metrics = [
 			</nav>
 
 			<section class="stage">
-				<p class="kicker">A command-line NestJS starter</p>				<h1 class="title">NestJS, scaffolded<span class="dot">.</span></h1>
+				<img class="hero-logo" src="/logo.svg" alt="NestForge logo" width="260" />
+				<p class="kicker">A command-line NestJS starter</p>
+				<h1 class="title">NestJS, scaffolded<span class="dot">.</span></h1>
 				<p class="lede">
 					One command gives you a production-grade NestJS backend — Express,
 					Redis-backed sessions, and no-op persistence so it boots before

@@ -8,7 +8,7 @@ export default defineConfig({
 		starlight({
 			title: 'nestforge',
 			description: 'Scaffold a production-ready NestJS backend from the command line.',
-			favicon: '/favicon.svg',
+			favicon: '/logo.svg',
 			logo: {
 				src: '/src/assets/logo.svg',
 				alt: 'nestforge',

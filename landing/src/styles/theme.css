@@ -41,6 +41,13 @@
 	--sl-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/* Docs header logo: bigger than the default Starlight sizing. */
+.site-title img {
+	height: 2.5rem;
+	width: auto;
+	flex-shrink: 0;
+}
+
 /* The NestJS-docs look is always dark. Map the light-mode block to the same
    palette so the theme toggle stays inert. */
 :root[data-theme='light'],
