@@ -137,6 +137,9 @@ pnpm lint
 - OAuth routes exist but are not fully wired. Configure the providers in `.env`
   and implement the strategy callback before use.
 - Rate limiting is enabled globally via `ThrottlerGuard`.
+- `QueueModule` is registered as a global module (`@Global`) because queues will
+  be used across many parts of the app. If that is not the case, drop `@Global`
+  and import `QueueModule` where it is needed instead.
 - The GraphQL variant mounts `/graphql` (Apollo Sandbox in development) and
   keeps the full REST API.
 - POST routes require a CSRF token; the cookie infrastructure is not wired up,

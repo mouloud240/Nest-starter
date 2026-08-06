@@ -7,6 +7,8 @@ Background jobs are handled by BullMQ. The project registers a global connection
 
 ## Queue setup
 
+`QueueModule` is registered as a global module (`@Global`), so queues can be injected from anywhere without importing it, since they are used across many parts of the app. If you no longer need it globally, drop `@Global()` and import `QueueModule` only where it is used.
+
 `QueueModule` configures the BullMQ connection using Redis:
 
 ```typescript title="src/infrastructure/queue/queue.module.ts"
