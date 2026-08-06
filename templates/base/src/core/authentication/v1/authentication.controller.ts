@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { Response } from 'express';
 import { AuthenticationService } from './authentication.service';
 import { registerDto } from './dtos/requests/register.dto';
 import { ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -9,10 +19,32 @@ import { User } from 'src/core/user/entities/user.entity';
 import { SessionAuthGuard } from '../guards/session.guard';
 import { GoogleGuard } from '../guards/oauth/google.guard';
 import { SessionRequest } from '../types/session-request.type';
+import { CsrfService } from '../../../common/modules/csrf/csrf.service';
 
 @Controller('authentication')
 export class AuthenticationController {
-  constructor(private readonly authenticationService: AuthenticationService) {}
+  constructor(
+    private readonly authenticationService: AuthenticationService,
+    private readonly csrfService: CsrfService,
+  ) {}
+
+  @Get('csrf')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Get CSRF token',
+    description:
+      'Generates and returns a CSRF token. The matching cookie is also set.',
+  })
+  @ApiOkResponse({
+    description: 'Returns the CSRF token.',
+  })
+  csrfToken(
+    @Req() request: SessionRequest,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return { csrfToken: this.csrfService.generateToken(request, response) };
+  }
+
   @UseGuards(LocalGuard)
   @Post('login')
   @ApiOperation({

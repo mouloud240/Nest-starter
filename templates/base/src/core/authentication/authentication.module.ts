@@ -8,9 +8,10 @@ import { UserModule } from '../user/user.module';
 import { AuthenticationController } from './v1/authentication.controller';
 import { AuthenticationService } from './v1/authentication.service';
 import { SessionAuthGuard } from './guards/session.guard';
+import { CsrfModule } from '../../common/modules/csrf/csrf.module';
 
 @Module({
-  imports: [PassportModule, UserModule],
+  imports: [PassportModule, UserModule, CsrfModule],
   controllers: [AuthenticationController],
   providers: [
     AuthenticationService,

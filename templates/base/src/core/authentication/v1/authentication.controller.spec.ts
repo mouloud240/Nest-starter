@@ -5,6 +5,7 @@ import { AuthenticationService } from './authentication.service';
 import { UserService } from 'src/core/user/v1/user.service';
 import { LocalGuard } from '../guards/local.guard';
 import { SessionAuthGuard } from '../guards/session.guard';
+import { CsrfService } from 'src/common/modules/csrf/csrf.service';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -16,6 +17,7 @@ describe('AuthenticationController', () => {
       providers: [
         { provide: AuthenticationService, useValue: {} },
         { provide: UserService, useValue: {} },
+        { provide: CsrfService, useValue: { generateToken: jest.fn() } },
         LocalGuard,
         SessionAuthGuard,
       ],

@@ -3,7 +3,6 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import helmet from 'helmet';
-import { doubleCsrf, DoubleCsrfConfigOptions } from 'csrf-csrf';
 import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from 'nestjs-redis-client';
@@ -14,6 +13,7 @@ import { LoggerServiceBuilder } from './monitoring/logger/logger.service';
 import { AppClusterService } from './infrastructure/clusters/app.clusterize';
 import { createSessionMiddleware } from './core/authentication/session/session.middleware';
 import { SessionRequest } from './core/authentication/types/session-request.type';
+import { CsrfService } from './common/modules/csrf/csrf.service';
 
 async function bootstrap() {
   // the cors will be changed to the front end url  in production environnement
@@ -47,21 +47,26 @@ async function bootstrap() {
     createSessionMiddleware(app.get(ConfigService), app.get(RedisService)),
   );
 
-  const opts: DoubleCsrfConfigOptions = {
-    getSecret: () => process.env.CSRF_SECRET || 'defaultCsrfSecret',
-    getSessionIdentifier: (req: SessionRequest) => req.sessionID,
-    cookieName: '__Host-psifi.x-csrf-token',
-    cookieOptions: {
-      sameSite: 'lax',
-      path: '/',
-      secure: false, //TODO:change in prod
-      httpOnly: false,
-    },
-    size: 64,
-    ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
-  };
-  const { doubleCsrfProtection } = doubleCsrf(opts);
-  app.use(doubleCsrfProtection);
+  const csrfService = app.get(CsrfService);
+  const csrfProtection = csrfService.middleware();
+
+  const CSRF_FREE_PATHS = [
+    '/api/v1/authentication/login',
+    '/api/v1/authentication/register',
+    '/api/v1/authentication/oauth/google',
+    '/api/v1/authentication/oauth/google/callback',
+  ];
+
+  app.use((req: SessionRequest, res, next) => {
+    if (
+      CSRF_FREE_PATHS.some(
+        (path) => req.path === path || req.path.startsWith(`${path}/`),
+      )
+    ) {
+      return next();
+    }
+    return csrfProtection(req, res, next);
+  });
 
   app.useGlobalInterceptors(new ResponseFormatterInterceptor());
   app.useGlobalPipes(
@@ -112,20 +117,19 @@ async function bootstrap() {
   app.setGlobalPrefix('api', { exclude: ['/api-docs', '/api-docs-json'] });
 
   //SWAGGER DOCS BUILDER
-  const csrfSecret = process.env.CSRF_SECRET || 'defaultCsrfSecret';
   const config = new DocumentBuilder()
     .setTitle('Core Api Documentation')
     .setDescription(
-      'The API documentation. POST/PUT/PATCH/DELETE requests require the CSRF token header shown below. In production, generate a real token from the cookie instead of using the default secret.',
+      'The API documentation. POST/PUT/PATCH/DELETE requests require a valid CSRF token in the x-csrf-token header. Request one from GET /api/v1/authentication/csrf.',
     )
     .setVersion('1.0')
     .addBearerAuth()
     .addGlobalParameters({
       name: 'x-csrf-token',
       in: 'header',
-      description: 'CSRF token. Default value is the development CSRF secret.',
+      description: 'CSRF token obtained from GET /api/v1/authentication/csrf.',
       required: true,
-      schema: { type: 'string', default: csrfSecret },
+      schema: { type: 'string' },
     })
     .addTag('Core')
     .build();
