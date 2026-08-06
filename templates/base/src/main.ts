@@ -112,11 +112,21 @@ async function bootstrap() {
   app.setGlobalPrefix('api', { exclude: ['/api-docs', '/api-docs-json'] });
 
   //SWAGGER DOCS BUILDER
+  const csrfSecret = process.env.CSRF_SECRET || 'defaultCsrfSecret';
   const config = new DocumentBuilder()
     .setTitle('Core Api Documentation')
-    .setDescription('The Api Documentation')
+    .setDescription(
+      'The API documentation. POST/PUT/PATCH/DELETE requests require the CSRF token header shown below. In production, generate a real token from the cookie instead of using the default secret.',
+    )
     .setVersion('1.0')
     .addBearerAuth()
+    .addGlobalParameters({
+      name: 'x-csrf-token',
+      in: 'header',
+      description: 'CSRF token. Default value is the development CSRF secret.',
+      required: true,
+      schema: { type: 'string', default: csrfSecret },
+    })
     .addTag('Core')
     .build();
   const document = SwaggerModule.createDocument(app, config);
