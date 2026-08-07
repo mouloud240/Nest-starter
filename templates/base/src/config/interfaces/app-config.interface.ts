@@ -3,6 +3,5 @@ export interface AppConfig {
     limit: number;
     ttl: number;
     blockDuration: number;
-    ignoreUserAgents: RegExp[];
   };
 }

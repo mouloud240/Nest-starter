@@ -20,7 +20,9 @@ export function createSessionMiddleware(
     secret: authConfig.session.secret,
     name: authConfig.session.name,
     resave: false,
-    saveUninitialized: false,
+    // A stable session must exist from the first request so the CSRF token
+    // binds to a persistent identifier on pre-auth routes.
+    saveUninitialized: true,
     cookie: authConfig.session.cookie,
   });
 }

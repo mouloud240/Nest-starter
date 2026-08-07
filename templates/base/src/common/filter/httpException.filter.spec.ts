@@ -2,21 +2,21 @@ import { BadRequestException } from '@nestjs/common';
 import { ArgumentsHost } from '@nestjs/common';
 import { HttpExceptionFilter } from './httpException.filter';
 
+function mockHost(_exception: BadRequestException) {
+  const json = jest.fn();
+  const response = { status: jest.fn().mockReturnValue({ json }) };
+  return {
+    json,
+    host: {
+      switchToHttp: () => ({
+        getResponse: () => response,
+      }),
+    } as unknown as ArgumentsHost,
+  };
+}
+
 describe('HttpExceptionFilter', () => {
   const filter = new HttpExceptionFilter();
-
-  function mockHost(exception: BadRequestException) {
-    const json = jest.fn();
-    const response = { status: jest.fn().mockReturnValue({ json }) };
-    return {
-      json,
-      host: {
-        switchToHttp: () => ({
-          getResponse: () => response,
-        }),
-      } as unknown as ArgumentsHost,
-    };
-  }
 
   it('preserves validation error message array from getResponse()', () => {
     const exception = new BadRequestException([

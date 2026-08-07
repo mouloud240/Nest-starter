@@ -25,7 +25,6 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
             limit: configService.throttler.limit,
             ttl: configService.throttler.ttl,
             blockDuration: configService.throttler.blockDuration,
-            ignoreUserAgents: configService.throttler.ignoreUserAgents,
           },
         ],
       }),

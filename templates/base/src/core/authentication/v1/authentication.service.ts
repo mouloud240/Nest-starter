@@ -50,6 +50,10 @@ export class AuthenticationService {
   }
 
   async login(request: SessionRequest, user: User): Promise<AuthResponseDto> {
+    // Regenerate the session id on login to prevent session fixation.
+    await new Promise<void>((resolve, reject) => {
+      request.session.regenerate((err) => (err ? reject(err) : resolve()));
+    });
     request.session.userId = user.id;
     return { user };
   }
