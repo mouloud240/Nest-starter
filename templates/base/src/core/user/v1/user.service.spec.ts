@@ -40,6 +40,31 @@ describe('UserService', () => {
     expect(result).toEqual(user);
   });
 
+  it('should create an OAuth user', async () => {
+    const user: User = {
+      id: '1',
+      email: 'test@example.com',
+      password: '',
+      isMailVerified: true,
+      oauthProvider: 'google',
+      oauthId: 'google-123',
+    };
+    userRepository.createOAuthUser.mockResolvedValue(user);
+
+    const result = await service.createOAuthUser({
+      email: 'test@example.com',
+      provider: 'google',
+      oauthId: 'google-123',
+    });
+
+    expect(result).toEqual(user);
+    expect(userRepository.createOAuthUser).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      provider: 'google',
+      oauthId: 'google-123',
+    });
+  });
+
   it('should find a user by email', async () => {
     const user: User = {
       id: '1',

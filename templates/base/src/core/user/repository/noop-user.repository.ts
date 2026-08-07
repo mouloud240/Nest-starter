@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { registerDto } from 'src/core/authentication/v1/dtos/requests/register.dto';
 import { User } from '../entities/user.entity';
-import { UserRepositoryInterface } from './user.respository-interface';
+import {
+  OAuthUserData,
+  UserRepositoryInterface,
+} from './user.respository-interface';
 
 @Injectable()
 export class NoopUserRepository implements UserRepositoryInterface {
@@ -18,6 +21,18 @@ export class NoopUserRepository implements UserRepositoryInterface {
     user.email = data.email;
     user.password = data.password;
     user.isMailVerified = false;
+    this.users.push(user);
+    return Promise.resolve(user);
+  }
+
+  createOAuthUser(data: OAuthUserData): Promise<User> {
+    const user = new User();
+    user.id = uuidv4();
+    user.email = data.email;
+    user.password = '';
+    user.isMailVerified = true;
+    user.oauthProvider = data.provider;
+    user.oauthId = data.oauthId;
     this.users.push(user);
     return Promise.resolve(user);
   }

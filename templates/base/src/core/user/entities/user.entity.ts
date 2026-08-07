@@ -3,4 +3,6 @@ export class User {
   email: string;
   password: string;
   isMailVerified: boolean;
+  oauthProvider?: string;
+  oauthId?: string;
 }

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
+import { BadRequestException } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { UserService } from 'src/core/user/v1/user.service';
 import { RedisService } from 'nestjs-redis-client';
@@ -7,10 +8,13 @@ import { QUEUE_NAME } from 'src/common/constants/queues';
 import { MAIL_JOBS } from 'src/common/constants/jobs';
 import authConfig from 'src/config/auth.config';
 import { User } from 'src/core/user/entities/user.entity';
+import { OAuthProfile } from '../oauth/oauth-providers';
 
 describe('AuthenticationService', () => {
   let service: AuthenticationService;
   const createUser = jest.fn();
+  const findByEmail = jest.fn();
+  const createOAuthUser = jest.fn();
   const mailAdd = jest.fn();
 
   beforeEach(async () => {
@@ -18,7 +22,10 @@ describe('AuthenticationService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthenticationService,
-        { provide: UserService, useValue: { createUser } },
+        {
+          provide: UserService,
+          useValue: { createUser, findByEmail, createOAuthUser },
+        },
         {
           provide: authConfig.KEY,
           useValue: {
@@ -80,6 +87,49 @@ describe('AuthenticationService', () => {
         to: 'user@example.com',
         code: expect.any(String),
       });
+    });
+  });
+
+  describe('logOauthUser', () => {
+    const profile: OAuthProfile = {
+      id: 'google-123',
+      provider: 'google',
+      emails: [{ value: 'USER@example.com', verified: true }],
+    };
+
+    it('returns the existing user when the email is already registered', async () => {
+      const existing = new User();
+      existing.id = 'user-1';
+      existing.email = 'user@example.com';
+      findByEmail.mockResolvedValue(existing);
+
+      const result = await service.logOauthUser(profile);
+
+      expect(result).toBe(existing);
+      expect(createOAuthUser).not.toHaveBeenCalled();
+    });
+
+    it('creates a verified user for a new OAuth account', async () => {
+      findByEmail.mockResolvedValue(null);
+      const created = new User();
+      created.id = 'user-2';
+      created.email = 'user@example.com';
+      createOAuthUser.mockResolvedValue(created);
+
+      const result = await service.logOauthUser(profile);
+
+      expect(createOAuthUser).toHaveBeenCalledWith({
+        email: 'user@example.com',
+        provider: 'google',
+        oauthId: 'google-123',
+      });
+      expect(result).toBe(created);
+    });
+
+    it('rejects a profile without an email', async () => {
+      await expect(
+        service.logOauthUser({ id: 'x', provider: 'google' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

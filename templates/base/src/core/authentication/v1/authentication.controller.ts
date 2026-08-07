@@ -17,7 +17,7 @@ import { LocalGuard } from '../guards/local.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { User } from 'src/core/user/entities/user.entity';
 import { SessionAuthGuard } from '../guards/session.guard';
-import { GoogleGuard } from '../guards/oauth/google.guard';
+import { OAuthGuard } from '../guards/oauth/oauth.guard';
 import { SessionRequest } from '../types/session-request.type';
 import { CsrfService } from '../../../common/modules/csrf/csrf.service';
 import { LoginDto } from './dtos/requests/login.dto';
@@ -175,13 +175,13 @@ export class AuthenticationController {
     summary: 'Google OAuth2 login',
     description: 'Initiates the Google OAuth2 login flow.',
   })
-  @UseGuards(GoogleGuard)
+  @UseGuards(OAuthGuard('google'))
   @Get('oauth/google')
   googleAuth() {
     return;
   }
 
-  @UseGuards(GoogleGuard)
+  @UseGuards(OAuthGuard('google'))
   @Get('oauth/google/callback')
   async googleAuthRedirect(
     @Req() request: SessionRequest,

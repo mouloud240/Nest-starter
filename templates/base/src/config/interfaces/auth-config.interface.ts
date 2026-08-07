@@ -17,6 +17,6 @@ export interface AuthConfig {
     secure: boolean;
   };
   oauth: {
-    google: StrategyOptionsGoogle;
+    google: Partial<StrategyOptionsGoogle>;
   };
 }

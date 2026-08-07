@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { registerDto } from 'src/core/authentication/v1/dtos/requests/register.dto';
 import { User } from '../entities/user.entity';
 import {
+  OAuthUserData,
   USER_REPOSITORY,
   UserRepositoryInterface,
 } from '../repository/user.respository-interface';
@@ -14,6 +15,10 @@ export class UserService {
 
   createUser(data: registerDto): Promise<User> {
     return this.userRepository.createUser(data);
+  }
+
+  createOAuthUser(data: OAuthUserData): Promise<User> {
+    return this.userRepository.createOAuthUser(data);
   }
   findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findByEmail(email);

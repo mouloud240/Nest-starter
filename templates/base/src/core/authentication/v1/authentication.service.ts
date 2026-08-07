@@ -4,7 +4,6 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
-  NotImplementedException,
   Inject,
 } from '@nestjs/common';
 import {
@@ -21,7 +20,7 @@ import { Queue } from 'bullmq';
 import { MAIL_JOBS } from 'src/common/constants/jobs';
 import { v4 as uuidv4 } from 'uuid';
 import authConfig from 'src/config/auth.config';
-import { Profile } from 'passport-google-oauth20';
+import { OAuthProfile } from '../oauth/oauth-providers';
 import { UserService } from 'src/core/user/v1/user.service';
 import { User } from 'src/core/user/entities/user.entity';
 import { SessionRequest } from '../types/session-request.type';
@@ -75,10 +74,22 @@ export class AuthenticationService {
         'User registered successfully. Please check your email for verification code.',
     };
   }
-  logOauthUser(profile: Profile): Promise<User> {
-    throw new NotImplementedException(
-      `OAuth login for provider ${profile.provider} is not configured.`,
-    );
+  async logOauthUser(profile: OAuthProfile): Promise<User> {
+    const email = profile.emails?.[0]?.value?.toLowerCase();
+    if (!email) {
+      throw new BadRequestException(
+        `OAuth ${profile.provider} account has no verified email`,
+      );
+    }
+    const existing = await this.userService.findByEmail(email);
+    if (existing) {
+      return existing;
+    }
+    return this.userService.createOAuthUser({
+      email,
+      provider: profile.provider,
+      oauthId: profile.id,
+    });
   }
   private async generateAndSetOtp(user: User): Promise<string> {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
