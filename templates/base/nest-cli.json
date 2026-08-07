@@ -3,8 +3,14 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-   "builder": "swc",
+    "builder": "swc",
     "typeCheck": true,
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "assets": [
+      {
+        "include": "**/*.hbs",
+        "outDir": "dist"
+      }
+    ]
   }
 }

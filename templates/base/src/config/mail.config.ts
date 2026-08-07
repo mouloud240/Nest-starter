@@ -17,7 +17,14 @@ export default registerAs(
       },
     },
     template: {
-      dir: join(process.cwd(), 'src', 'common', 'modules', 'email', 'templates'),
+      dir: join(
+        process.cwd(),
+        process.env.NODE_ENV === 'production' ? 'dist' : 'src',
+        'common',
+        'modules',
+        'email',
+        'templates',
+      ),
       adapter: new HandlebarsAdapter(),
       options: {
         strict: true,
