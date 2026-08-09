@@ -19,5 +19,11 @@ export class UserType {
   })
   isMailVerified: boolean;
 
+  @Field(() => String, {
+    description: 'Display username',
+    nullable: true,
+  })
+  username?: string;
+
   // Password is intentionally not exposed in GraphQL schema
 }

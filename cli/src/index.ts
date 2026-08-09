@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { realpathSync } from 'node:fs';
+import { realpathSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import {
@@ -7,6 +7,7 @@ import {
   outro,
   text,
   select,
+  multiselect,
   confirm,
   spinner,
   isCancel,
@@ -24,6 +25,52 @@ const LOGO = `
 ██║╚██╗██║██╔══╝  ╚════██║   ██║   ██   ██║╚════██║██╔══╝  ██║   ██║██╔══██╗██║   ██║██╔══╝
 ██║ ╚████║███████╗███████║   ██║   ╚█████╔╝███████║██║     ╚██████╔╝██║  ██║╚██████╔╝███████╗
 ╚═╝  ╚═══╝╚══════╝╚══════╝   ╚═╝    ╚════╝ ╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝`;
+
+function readVersion(): string {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+    );
+    return pkg.version ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+function showHelp() {
+  console.log(`${pc.bold(pc.magenta('create-nestforge'))} ${pc.dim(`v${readVersion()}`)}`);
+  console.log(pc.dim('Scaffold a production-ready NestJS backend in seconds.'));
+  console.log('');
+  console.log(`${pc.bold('Usage:')}`);
+  console.log(`  ${pc.cyan('npx create-nestforge@latest')} ${pc.dim('[flags]')}`);
+  console.log(`  ${pc.cyan('pnpm create nestforge@latest')} ${pc.dim('[flags]')}`);
+  console.log('');
+  console.log(`${pc.bold('Flags:')}`);
+  console.log(`  ${pc.yellow('--help')}              ${pc.dim('Show this help message and exit')}`);
+  console.log(`  ${pc.yellow('--version')}           ${pc.dim('Print version and exit')}`);
+  console.log(`  ${pc.yellow('--project-name')}      ${pc.dim('Project name (kebab-case)')}`);
+  console.log(`  ${pc.yellow('--variant')}           ${pc.dim('"rest" or "graphql"')}`);
+  console.log(`  ${pc.yellow('--oauth-providers')}  ${pc.dim('Comma-separated: google,github')}`);
+  console.log(`  ${pc.yellow('--target-dir')}        ${pc.dim('Override output directory')}`);
+  console.log(`  ${pc.yellow('--git')}               ${pc.dim('Initialize a git repo (default)')}`);
+  console.log(`  ${pc.yellow('--no-git')}            ${pc.dim('Skip git initialization')}`);
+  console.log('');
+  console.log(`${pc.bold('Examples:')}`);
+  console.log(`  ${pc.dim('# interactive mode')}`);
+  console.log(`  ${pc.cyan('npx create-nestforge@latest')}`);
+  console.log(`  ${pc.dim('')}`);
+  console.log(`  ${pc.dim('# automation / CI')}`);
+  console.log(`  ${pc.cyan('npx create-nestforge@latest --project-name my-app --variant graphql')}`);
+  console.log(`  ${pc.dim('')}`);
+  console.log(`  ${pc.dim('# specify output directory')}`);
+  console.log(`  ${pc.cyan('npx create-nestforge@latest --project-name my-app --target-dir ./out')}`);
+  process.exit(0);
+}
+
+function showVersion() {
+  console.log(readVersion());
+  process.exit(0);
+}
 
 function parseArgs(argv: string[]) {
   const args: Record<string, string> = {};
@@ -54,7 +101,14 @@ function formatCommand(label: string, command: string) {
 }
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+
+  for (const arg of argv) {
+    if (arg === '--help' || arg === '-h') showHelp();
+    if (arg === '--version' || arg === '-v') showVersion();
+  }
+
+  const args = parseArgs(argv);
 
   intro(banner());
 
@@ -82,7 +136,7 @@ async function main() {
     args['variant'] === 'graphql' ? 'graphql' : 'rest';
   if (!args['variant'] && !args['target-dir']) {
     const result = await select({
-      message: `${pc.bold('Step 2 of 3')} — Which variant?`,
+      message: `${pc.bold('Step 2 of 4')} — Which variant?`,
       options: [
         { value: 'rest', label: 'Express + REST (default)' },
         { value: 'graphql', label: 'GraphQL (Apollo)' },
@@ -96,6 +150,28 @@ async function main() {
     variant = result as Variant;
   }
 
+  let oauthProviders: string[] | undefined;
+  const oauthFlags = args['oauth-providers'];
+  if (oauthFlags !== undefined) {
+    oauthProviders = oauthFlags
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  } else if (!args['target-dir']) {
+    const result = await multiselect({
+      message: `${pc.bold('Step 3 of 4')} — Which OAuth providers?`,
+      options: [
+        { value: 'google', label: 'Google', hint: 'ready' },
+      ],
+      required: false,
+    });
+    if (isCancel(result)) {
+      outro(pc.red('Cancelled'));
+      process.exit(0);
+    }
+    oauthProviders = (result as string[]) ?? [];
+  }
+
   // Create the project next to where the command is run, named after the
   // project. `--target-dir` overrides this for automation.
   const targetDir = args['target-dir'] ?? path.join(process.cwd(), projectName);
@@ -107,7 +183,7 @@ async function main() {
     args['target-dir'] === undefined
   ) {
     const result = await confirm({
-      message: `${pc.bold('Step 3 of 3')} — Initialize a git repository?`,
+      message: `${pc.bold('Step 4 of 4')} — Initialize a git repository?`,
       initialValue: true,
     });
     if (isCancel(result)) {
@@ -119,7 +195,13 @@ async function main() {
 
   const s = spinner();
   s.start(`Creating ${pc.bold(projectName)} (${variant})...`);
-  await createProject({ projectName, targetDir, variant, initGit });
+  await createProject({
+    projectName,
+    targetDir,
+    variant,
+    initGit,
+    oauthProviders,
+  });
   s.stop(`${pc.green(pc.bold('✔'))} Created ${pc.bold(projectName)} at ${pc.cyan(targetDir)}`);
 
   note(

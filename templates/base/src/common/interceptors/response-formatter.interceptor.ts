@@ -12,6 +12,9 @@ export class ResponseFormatterInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler<any>,
   ): Observable<any> | Promise<Observable<any>> {
+    if (context.getType() !== 'http') {
+      return next.handle();
+    }
     return next.handle().pipe(
       map((data) => {
         return {

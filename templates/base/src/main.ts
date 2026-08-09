@@ -55,6 +55,7 @@ async function bootstrap() {
     '/api/v1/authentication/register',
     '/api/v1/authentication/oauth/google',
     '/api/v1/authentication/oauth/google/callback',
+    '/graphql',
   ];
 
   app.use((req: SessionRequest, res, next) => {

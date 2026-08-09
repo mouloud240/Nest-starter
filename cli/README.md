@@ -35,11 +35,16 @@ npx create-nestforge@latest --project-name my-app --variant graphql
 
 Available flags:
 
-| Flag             | Description                                                          |
-| ---------------- | -------------------------------------------------------------------- |
-| `--project-name` | Project name (defaults to an interactive prompt)                     |
-| `--variant`      | `rest` or `graphql` (defaults to an interactive prompt, then `rest`) |
-| `--target-dir`   | Override where the project is created (defaults to `./<project-name>`) |
+| Flag | Description |
+| --- | --- |
+| `--help` | Show help message and exit |
+| `--version` | Print version and exit |
+| `--project-name` | Project name (defaults to an interactive prompt) |
+| `--oauth-providers` | Comma-separated provider list: `google,github` |
+| `--variant` | `rest` or `graphql` (defaults to an interactive prompt, then `rest`) |
+| `--target-dir` | Override where the project is created (defaults to `./<project-name>`) |
+| `--git` | Initialize a git repository (default) |
+| `--no-git` | Skip git initialization |
 
 ## Running the generated project
 

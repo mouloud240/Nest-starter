@@ -92,4 +92,45 @@ describe('createProject', () => {
 
     expect(existsSync(join(targetDir, '.git'))).toBe(false);
   });
+
+  it('keeps all oauth env vars when oauthProviders is undefined', async () => {
+    await createProject({
+      projectName: 'oauth-default',
+      targetDir,
+      variant: 'rest',
+      templatesDir: REPO_TEMPLATES,
+    });
+
+    const env = readFileSync(join(targetDir, '.env'), 'utf8');
+    expect(env).toContain('GOOGLE_OAUTH_CLIENT_ID');
+    expect(env).not.toContain('GITHUB_OAUTH_CLIENT_ID');
+  });
+
+  it('keeps only selected oauth provider env vars', async () => {
+    await createProject({
+      projectName: 'oauth-google',
+      targetDir,
+      variant: 'rest',
+      templatesDir: REPO_TEMPLATES,
+      oauthProviders: ['google'],
+    });
+
+    const env = readFileSync(join(targetDir, '.env'), 'utf8');
+    expect(env).toContain('GOOGLE_OAUTH_CLIENT_ID');
+    expect(env).not.toContain('GITHUB_OAUTH_CLIENT_ID');
+  });
+
+  it('strips all oauth env vars when oauthProviders is empty', async () => {
+    await createProject({
+      projectName: 'oauth-none',
+      targetDir,
+      variant: 'rest',
+      templatesDir: REPO_TEMPLATES,
+      oauthProviders: [],
+    });
+
+    const env = readFileSync(join(targetDir, '.env'), 'utf8');
+    expect(env).not.toContain('GOOGLE_OAUTH_CLIENT_ID');
+    expect(env).not.toContain('GITHUB_OAUTH_CLIENT_ID');
+  });
 });

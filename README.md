@@ -11,6 +11,7 @@
   <a href="https://github.com/mouloud240/NestForge"><img src="https://img.shields.io/github/stars/mouloud240/NestForge?style=flat-square&logo=github&color=780f20" alt="GitHub stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/npm/l/create-nestforge?style=flat-square&label=license&color=780f20" alt="License"></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D%2022-780f20?style=flat-square&logo=node.js&logoColor=white" alt="Node.js &gt;= 22"></a>
+  <a href="https://github.com/mouloud240/NestForge"><img src="https://img.shields.io/badge/tests-32%20passing-780f20?style=flat-square&label=tests" alt="Tests passing"></a>
   <a href="https://github.com/mouloud240/NestForge"><img src="https://img.shields.io/badge/PRs-welcome-780f20?style=flat-square" alt="PRs welcome"></a>
 </p>
 
@@ -25,15 +26,15 @@ The generated project ships with:
 
 - **Interactive scaffolding** — prompts for project name and variant, then
   creates the project in the directory where you ran the command.
-- **Non-interactive mode** — `--project-name`, `--target-dir`, and `--variant`
-  flags for automation and CI.
+- **Non-interactive mode** — `--project-name`, `--variant`, `--oauth-providers`,
+  `--target-dir`, `--git`, `--no-git`, `--help`, and `--version` flags for automation and CI.
 - **Express + REST** — a NestJS API with URI versioning (`/api/v1`).
 - **Express + GraphQL** — an Apollo (code-first) `/graphql` endpoint layered
   over the REST API, with auth and user resolvers plus per-request
   DataLoaders.
-- **Auth-ready** — Passport local and Google OAuth strategies, Redis-backed
-  sessions, guards, DTO validation, email-verification codes, and password
-  reset.
+- **Auth-ready** — Passport local and Google OAuth strategies (Google selectable
+  at scaffold time), Redis-backed sessions, guards, DTO validation,
+  email-verification codes, and password reset.
 - **WebSocket gateway** — socket.io gateway with a Redis adapter for
   horizontal scaling and 1-to-1 messaging.
 - **Background jobs** — BullMQ queues for mail and upload processing.
@@ -141,8 +142,8 @@ pnpm lint
 
 - `USER_REPOSITORY` is a no-op stub. Add a real repository when you are ready to
   persist users.
-- OAuth routes exist but are not fully wired. Configure the providers in `.env`
-  and implement the strategy callback before use.
+- OAuth providers can be selected at scaffold time. The registry auto-disables
+  providers whose environment variables are not configured.
 - Rate limiting is enabled globally via `ThrottlerGuard`.
 - `QueueModule` is registered as a global module (`@Global`) because queues will
   be used across many parts of the app. If that is not the case, drop `@Global`

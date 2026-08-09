@@ -1,4 +1,4 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { UserService } from './v1/user.service';
 import { UserType } from '../authentication/graphql/types/user.type';
@@ -7,6 +7,7 @@ import { MessageResponseType } from '../authentication/graphql/types/message-res
 import { SessionAuthGuard } from '../authentication/guards/session.guard';
 import { CurrentUser } from '../authentication/decorators/current-user.decorator';
 import { User } from './entities/user.entity';
+import { SessionRequest } from '../authentication/types/session-request.type';
 
 /**
  * GraphQL resolver for user operations
@@ -46,7 +47,7 @@ export class UserResolver {
     }
 
     if (updateProfileInput.username !== undefined) {
-      // placeholder
+      currentUser.username = updateProfileInput.username;
     }
 
     const updatedUser = await this.userService.updateUser(currentUser);
@@ -57,11 +58,19 @@ export class UserResolver {
   @Mutation(() => MessageResponseType, {
     description: 'Delete current user account permanently',
   })
-  async deleteAccount(@CurrentUser() user: User): Promise<MessageResponseType> {
+  async deleteAccount(
+    @Context() ctx: { req: SessionRequest },
+    @CurrentUser() user: User,
+  ): Promise<MessageResponseType> {
     const currentUser = await this.userService.findById(user.id);
     if (!currentUser) {
       throw new Error('User not found');
     }
+
+    await this.userService.deleteUser(user.id);
+    await new Promise<void>((resolve, reject) => {
+      ctx.req.session.destroy((err) => (err ? reject(err) : resolve()));
+    });
 
     return new MessageResponseType('Account deleted successfully');
   }

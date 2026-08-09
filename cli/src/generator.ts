@@ -16,6 +16,32 @@ const IGNORED = new Set([
   'pnpm-lock.yaml',
 ]);
 
+const PROVIDER_ENV_PREFIXES: Record<string, string> = {
+  google: 'GOOGLE_OAUTH_',
+  github: 'GITHUB_OAUTH_',
+};
+
+function stripOauthEnv(
+  content: string,
+  selectedProviders: string[] | undefined,
+): string {
+  if (selectedProviders === undefined) return content;
+  const keepPrefixes = new Set(
+    selectedProviders.map((p) => PROVIDER_ENV_PREFIXES[p]).filter(Boolean),
+  );
+  return content
+    .split('\n')
+    .filter((line) => {
+      for (const prefix of Object.values(PROVIDER_ENV_PREFIXES)) {
+        if (line.startsWith(prefix) && !keepPrefixes.has(prefix)) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .join('\n');
+}
+
 export type Variant = 'rest' | 'graphql';
 
 export interface CreateProjectOptions {
@@ -25,6 +51,7 @@ export interface CreateProjectOptions {
   templatesDir?: string;
   initGit?: boolean;
   gitInitBranch?: string;
+  oauthProviders?: string[];
 }
 
 export async function createProject(options: CreateProjectOptions) {
@@ -35,6 +62,7 @@ export async function createProject(options: CreateProjectOptions) {
     templatesDir,
     initGit = false,
     gitInitBranch = 'main',
+    oauthProviders,
   } = options;
   const dest = path.resolve(targetDir);
   const resolvedTemplatesDir = templatesDir
@@ -72,7 +100,8 @@ export async function createProject(options: CreateProjectOptions) {
   await writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
   const envExample = await readFile(path.join(dest, '.env.example'), 'utf8');
-  await writeFile(path.join(dest, '.env'), envExample);
+  const strippedEnv = stripOauthEnv(envExample, oauthProviders);
+  await writeFile(path.join(dest, '.env'), strippedEnv);
 
   if (initGit) {
     execSync(`git init -b ${gitInitBranch}`, {

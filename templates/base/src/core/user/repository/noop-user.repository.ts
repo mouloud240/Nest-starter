@@ -19,6 +19,7 @@ export class NoopUserRepository implements UserRepositoryInterface {
     const user = new User();
     user.id = uuidv4();
     user.email = data.email;
+    user.username = data.username;
     user.password = data.password;
     user.isMailVerified = false;
     this.users.push(user);
@@ -48,5 +49,13 @@ export class NoopUserRepository implements UserRepositoryInterface {
     }
     this.users[index] = user;
     return Promise.resolve(user);
+  }
+
+  deleteUser(id: string): Promise<void> {
+    const index = this.users.findIndex((u) => u.id === id);
+    if (index !== -1) {
+      this.users.splice(index, 1);
+    }
+    return Promise.resolve();
   }
 }

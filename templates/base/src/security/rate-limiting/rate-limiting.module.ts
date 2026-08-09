@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import appConfig from 'src/config/app.config';
 import redisConfig from 'src/config/redis.config';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import { HttpThrottlerGuard } from './http-throttler.guard';
 @Module({
   imports: [
     ThrottlerModule.forRootAsync({
@@ -33,7 +34,7 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: HttpThrottlerGuard,
     },
   ],
   exports: [ThrottlerModule],

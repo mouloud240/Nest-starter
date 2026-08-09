@@ -17,19 +17,25 @@ When run without flags, the CLI asks for:
 
 1. **Project name** — lowercase letters, numbers, and dashes only.
 2. **Variant** — `Express + REST` or `GraphQL (Apollo)`.
+3. **OAuth providers** — select which providers to include (currently Google).
 
 ## Flags
 
 | Flag | Description | Example |
 | --- | --- | --- |
+| `--help` | Show help message and exit | `--help` |
+| `--version` | Print version and exit | `--version` |
 | `--project-name` | Project name and target directory | `--project-name my-app` |
+| `--oauth-providers` | Comma-separated OAuth providers: `google,github` | `--oauth-providers google` |
 | `--variant` | Template variant: `rest` or `graphql` | `--variant graphql` |
 | `--target-dir` | Override the output directory | `--target-dir ./output/my-app` |
+| `--git` | Initialize a git repository (default) | `--git` |
+| `--no-git` | Skip git initialization | `--no-git` |
 
 ## Automation example
 
 ```bash
-npx create-nestforge@latest --project-name my-app --variant graphql
+npx create-nestforge@latest --project-name my-app --variant graphql --oauth-providers google
 ```
 
 This creates `my-app` in the current working directory, copies the base template, and layers the GraphQL overlay on top.

@@ -34,16 +34,12 @@ Both variants are template overlays in `templates/`:
 - `fastify` — Fastify + REST + Redis-backed sessions
 
 The historical `fastify` branch contains the reference implementation it will
-be derived from. The `graphql` branch was folded into the `graphql` overlay.
+be derived from.
 
 ## Manual alternative
 
-You can clone the reference branches directly:
+You can clone the `fastify` reference branch directly:
 
 ```bash
 git clone -b fastify https://github.com/mouloud240/NestForge.git
-git clone -b graphql https://github.com/mouloud240/NestForge.git
 ```
-
-These are the source variants the templates were derived from; they are not the
-primary distribution mechanism.

@@ -15,4 +15,5 @@ export interface UserRepositoryInterface {
   createOAuthUser(data: OAuthUserData): Promise<User>;
   findById(id: string): Promise<User | null>;
   updateUser(user: User): Promise<User>;
+  deleteUser(id: string): Promise<void>;
 }
