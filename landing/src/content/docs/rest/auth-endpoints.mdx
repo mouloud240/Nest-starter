@@ -16,8 +16,8 @@ The REST authentication controller exposes the endpoints used for login, registr
 | `POST` | `/api/v1/authentication/verify-email` | — | Verifies the email with the OTP code. |
 | `POST` | `/api/v1/authentication/forgot-password` | — | Sends a password reset email. |
 | `POST` | `/api/v1/authentication/reset-password` | — | Resets the password with a token. |
-| `GET` | `/api/v1/authentication/oauth/google` | `GoogleGuard` | Starts Google OAuth flow. |
-| `GET` | `/api/v1/authentication/oauth/google/callback` | `GoogleGuard` | OAuth callback that creates a session. |
+| `GET` | `/api/v1/authentication/oauth/google` | `OAuthGuard('google')` | Starts Google OAuth flow. |
+| `GET` | `/api/v1/authentication/oauth/google/callback` | `OAuthGuard('google')` | OAuth callback that creates a session. |
 
 ## Response format
 

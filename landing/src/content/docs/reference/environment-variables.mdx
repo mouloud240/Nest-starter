@@ -60,15 +60,9 @@ Redis is required for sessions, rate limiting, queues, and WebSocket session res
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth client secret | `...` |
 | `GOOGLE_OAUTH_CALLBACK_URL` | Callback URL | `${BACKEND_API_URL}/authentication/oauth/google/callback` |
 
-### GitHub OAuth
-
-| Variable | Purpose | Example |
-| --- | --- | --- |
-| `GITHUB_OAUTH_CLIENT_ID` | GitHub OAuth client ID | `...` |
-| `GITHUB_OAUTH_CLIENT_SECRET` | GitHub OAuth client secret | `...` |
-| `GITHUB_OAUTH_CALLBACK_URL` | Callback URL | `${BACKEND_API_URL}/authentication/oauth/github/callback` |
-
-The GitHub OAuth routes are not wired in the current controller. Add them if you need GitHub login.
+Google OAuth is automatically enabled at boot when all three variables are set to
+actual values (not the `your-` placeholder). The provider is also selectable
+at scaffold time via the CLI.
 
 ## Session
 

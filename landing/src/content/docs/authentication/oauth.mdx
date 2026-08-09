@@ -1,19 +1,114 @@
 ---
 title: OAuth
-description: Google OAuth login flow.
+description: Google OAuth login flow and the provider registry.
 ---
 
-OAuth login is implemented through Passport's Google strategy. The routes are registered in the REST authentication controller, but the actual provider-specific profile handling is left for you to complete.
+OAuth login uses Passport strategies and a provider registry that auto-detects
+which providers are configured at boot. Only Google is included by default, but
+the registry is designed for extension.
+
+## Architecture
+
+Three files form the registry:
+
+| File | Role |
+| --- | --- |
+| `oauth/oauth-providers.ts` | Defines each provider: name, enable-check, and strategy factory. |
+| `oauth/oauth-strategy.registry.ts` | `OnModuleInit` service that iterates providers at boot and registers enabled ones with Passport. |
+| `guards/oauth/oauth.guard.ts` | Guard factory `OAuthGuard(provider)` that returns 404 if the provider is not enabled. |
+
+```
+CLI prompt / --oauth-providers
+        │
+        ▼
+  .env.example → .env  (stripped for unselected providers)
+        │
+        ▼  boot
+  OAuthStrategyRegistry.onModuleInit()
+        │
+        ├── isEnabled(config) → clientID / secret / callbackURL are set?
+        │                           yes → passport.use('google', strategy)
+        │                           no  → skip, log warning
+        │
+        ▼
+  GET /api/v1/authentication/oauth/google
+        │
+        ▼
+  OAuthGuard('google').canActivate()
+        ├── registry.isEnabled('google')? → false → 404
+        │                                  → true  → redirect to Google
+        │
+        ▼
+  GET .../oauth/google/callback
+        │
+        ▼
+  GoogleStrategy.verify(profile)
+        → AuthenticationService.logOauthUser(profile) → find-or-create user → session
+```
+
+## Provider definition
+
+Each provider in `OAUTH_PROVIDERS[]` implements this shape:
+
+```typescript
+interface OAuthProviderDefinition {
+  name: string;
+  isEnabled(config: AuthConfig): boolean;
+  buildStrategy(config: AuthConfig, verify: OAuthVerifyCallback): unknown;
+}
+```
+
+The `isEnabled` check returns `true` only when all three env variables (client ID,
+client secret, callback URL) are present and not the `your-...` placeholder. A
+provider whose `.env` values are left as defaults is skipped silently at boot.
+
+Adding a new provider means adding one entry to `OAUTH_PROVIDERS[]`, a
+`passport-*` dependency to `package.json`, and two controller endpoints.
+
+## Registry boot sequence
+
+`OAuthStrategyRegistry` runs on module init:
+
+1. Iterates `OAUTH_PROVIDERS`.
+2. Calls `provider.isEnabled(config)` for each.
+3. If enabled, calls `provider.buildStrategy(config, verify)` which creates the
+   Passport strategy instance and registers it with `passport.use(name, strategy)`.
+4. If disabled, logs a warning and continues.
+
+The `verify` callback delegates to `AuthenticationService.logOauthUser`, which
+performs a find-or-create against the user repository.
+
+## Guard
+
+`OAuthGuard` is a **guard factory** — call `OAuthGuard('google')` to get a NestJS
+guard class. Before delegating to Passport, `canActivate` checks
+`registry.isEnabled(provider)`. If the provider was not enabled at boot (missing
+or placeholder env vars), it throws `NotFoundException` immediately, bypassing
+Passport entirely.
 
 ## Routes
 
-- `GET /api/v1/authentication/oauth/google` — Initiates the Google OAuth flow.
-- `GET /api/v1/authentication/oauth/google/callback` — Handles the callback and calls `AuthenticationService.login` to create a session.
+- `GET /api/v1/authentication/oauth/google` — starts the Google OAuth flow.
+- `GET /api/v1/authentication/oauth/google/callback` — handles the callback,
+  creates a session, and redirects to the frontend.
 
-## What is implemented
+Both routes are exempt from CSRF in `main.ts`.
 
-The guard, strategy, and routes are wired. The callback writes the returned user into a session, just like local login. To use it, configure the Google OAuth credentials in `.env` and implement the provider mapping in `AuthenticationService`.
+## CLI integration
+
+The scaffolder asks which OAuth providers you need (currently Google). Unselected
+providers have their env block stripped from the generated `.env`, so they can
+never activate at boot. Use `--oauth-providers google` in non-interactive mode.
 
 ## Next steps
 
-The provider profile normalization and user lookup/create logic are intentionally stubbed because they depend on your user model and OAuth providers. Once you have defined how a Google profile maps to your user entity, OAuth login works the same way as local login from the client's perspective: a session cookie is returned and used for subsequent requests.
+After scaffolding, fill in your Google OAuth credentials in `.env`:
+
+```bash
+GOOGLE_OAUTH_CLIENT_ID=actual-client-id
+GOOGLE_OAUTH_CLIENT_SECRET=actual-client-secret
+GOOGLE_OAUTH_CALLBACK_URL=http://localhost:3000/api/v1/authentication/oauth/google/callback
+```
+
+Once configured, the registry enables the strategy at boot and the OAuth
+endpoints are ready.
