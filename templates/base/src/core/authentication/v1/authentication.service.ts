@@ -11,6 +11,7 @@ import {
   generateHash,
 } from 'src/common/utils/authentication/hash.utils';
 import { AuthResponseDto } from './dtos/responses/auth-response.dto';
+import { MessageResponseDto } from './dtos/responses/message-response.dto';
 import { registerDto } from './dtos/requests/register.dto';
 import { ConfigType } from '@nestjs/config';
 import { RedisService } from 'nestjs-redis-client';
@@ -55,16 +56,16 @@ export class AuthenticationService {
       request.session.regenerate((err) => (err ? reject(err) : resolve()));
     });
     request.session.userId = user.id;
-    return { user };
+    return new AuthResponseDto(user);
   }
 
-  async logout(request: SessionRequest): Promise<{ message: string }> {
+  async logout(request: SessionRequest): Promise<MessageResponseDto> {
     return new Promise((resolve, reject) => {
       request.session.destroy((err) => {
         if (err) {
           return reject(err);
         }
-        resolve({ message: 'Logged out successfully' });
+        resolve(new MessageResponseDto('Logged out successfully'));
       });
     });
   }
@@ -73,10 +74,9 @@ export class AuthenticationService {
     const password = await generateHash(data.password);
     const user = await this.userService.createUser({ ...data, password });
     await this.sendVerificationCode(user);
-    return {
-      message:
-        'User registered successfully. Please check your email for verification code.',
-    };
+    return new MessageResponseDto(
+      'User registered successfully. Please check your email for verification code.',
+    );
   }
   async logOauthUser(profile: OAuthProfile): Promise<User> {
     const email = profile.emails?.[0]?.value?.toLowerCase();
@@ -115,9 +115,9 @@ export class AuthenticationService {
       throw new NotFoundException('User not found');
     }
     await this.sendVerificationCode(user);
-    return {
-      message: 'Verification code sent successfully. Please check your email.',
-    };
+    return new MessageResponseDto(
+      'Verification code sent successfully. Please check your email.',
+    );
   }
 
   async verifyEmail(email: string, code: string) {
@@ -132,9 +132,7 @@ export class AuthenticationService {
     user.isMailVerified = true;
     await this.userService.updateUser(user);
     await this.redisService.del(`verification:${email}`);
-    return {
-      message: 'Email verified successfully.',
-    };
+    return new MessageResponseDto('Email verified successfully.');
   }
 
   async forgotPassword(email: string) {
@@ -148,10 +146,9 @@ export class AuthenticationService {
       to: user.email,
       token,
     });
-    return {
-      message:
-        'Password reset email sent successfully. Please check your email.',
-    };
+    return new MessageResponseDto(
+      'Password reset email sent successfully. Please check your email.',
+    );
   }
 
   async resetPassword(token: string, password: string) {
@@ -168,8 +165,6 @@ export class AuthenticationService {
     user.password = await generateHash(password);
     await this.userService.updateUser(user);
     await this.redisService.del(`password-reset:${token}`);
-    return {
-      message: 'Password reset successfully.',
-    };
+    return new MessageResponseDto('Password reset successfully.');
   }
 }

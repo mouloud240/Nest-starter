@@ -63,8 +63,6 @@ export class UserResolver {
       throw new Error('User not found');
     }
 
-    return {
-      message: 'Account deleted successfully',
-    };
+    return new MessageResponseType('Account deleted successfully');
   }
 }

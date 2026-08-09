@@ -13,6 +13,7 @@ import { AuthenticationService } from './authentication.service';
 import { registerDto } from './dtos/requests/register.dto';
 import { ApiBody, ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthResponseDto } from './dtos/responses/auth-response.dto';
+import { CsrfTokenDto } from './dtos/responses/csrf-token.dto';
 import { LocalGuard } from '../guards/local.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { User } from 'src/core/user/entities/user.entity';
@@ -43,7 +44,7 @@ export class AuthenticationController {
     @Req() request: SessionRequest,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return { csrfToken: this.csrfService.generateToken(request, response) };
+    return new CsrfTokenDto(this.csrfService.generateToken(request, response));
   }
 
   @UseGuards(LocalGuard)

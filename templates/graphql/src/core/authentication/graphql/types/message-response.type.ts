@@ -14,4 +14,8 @@ import { Field, ObjectType } from '@nestjs/graphql';
 export class MessageResponseType {
   @Field(() => String, { description: 'Response message' })
   message: string;
+
+  constructor(message: string) {
+    this.message = message;
+  }
 }
